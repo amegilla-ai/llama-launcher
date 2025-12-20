@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Parameters - {{model_name}}</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #e0e7ff;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --gpu-accent: #6366f1;
+            --cpu-accent: #10b981;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border-left: 6px solid var(--primary);
+        }
+
+        .header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .model-path {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .split-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .mode-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        .mode-header {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--bg);
+            display: flex;
+            align-items: center;
+        }
+
+        /* Distinctive accents for GPU/CPU */
+        .gpu-title { color: var(--gpu-accent); }
+        .cpu-title { color: var(--cpu-accent); }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px; /* Prevents overlapping cells */
+        }
+
+        th {
+            text-align: left;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            padding: 0 10px 8px 10px;
+        }
+
+        td { padding: 0 5px; }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .btn-delete {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-delete:hover { background: #fecaca; }
+
+        .btn-add {
+            background: var(--bg);
+            color: var(--text-main);
+            border: 2px dashed var(--border);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-add:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .actions {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .btn-save {
+            background: var(--primary);
+            color: white;
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-reset {
+            background: #fff7ed;
+            color: #c2410c;
+            padding: 12px 24px;
+            border: 1px solid #fdba74;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 12px 24px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 900px) {
+            .split-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>{{model_name}}</h2>
+        <span class="model-path">{{model_path}}</span>
+    </div>
+
+    <form method="POST" action="/save" id="paramForm">
+        <input type="hidden" name="model_path" value="{{model_path}}">
+
+        <div class="split-container">
+            <div class="mode-section">
+                <div class="mode-header gpu-title">GPU Parameters</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%">Flag</th>
+                            <th style="width: 50%">Value</th>
+                            <th style="width: 10%"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="param-area-gpu"></tbody>
+                </table>
+                <button type="button" class="btn-add" onclick="addNewParam('gpu')">+ Add Parameter</button>
+            </div>
+
+            <div class="mode-section">
+                <div class="mode-header cpu-title">CPU Parameters</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%">Flag</th>
+                            <th style="width: 50%">Value</th>
+                            <th style="width: 10%"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="param-area-cpu"></tbody>
+                </table>
+                <button type="button" class="btn-add" onclick="addNewParam('cpu')">+ Add Parameter</button>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button type="submit" class="btn-save">Save All Changes</button>
+            <button type="button" class="btn-reset" onclick="resetToDefaults()">Reset Defaults</button>
+            <a href="/" class="back-link">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+const modelConfig = {{ model_config|tojson|safe }};
+
+function renderMode(mode) {
+    let tbody = document.getElementById(`param-area-${mode}`);
+    tbody.innerHTML = "";
+    let cfg = modelConfig[mode] || {};
+    Object.keys(cfg).forEach(key => addParamRow(mode, key, cfg[key]));
+}
+
+function addParamRow(mode, key = '', value = '') {
+    let tbody = document.getElementById(`param-area-${mode}`);
+    let row = document.createElement("tr");
+    let uid = `${mode}_${Date.now()}_${Math.random()}`;
+    
+    row.innerHTML = `
+        <td><input name="k_${uid}" value="${key}" placeholder="e.g. --ctx-size"></td>
+        <td><input name="v_${uid}" value="${value}" placeholder="value"></td>
+        <td><button type="button" class="btn-delete" onclick="this.closest('tr').remove()">×</button></td>
+    `;
+    tbody.appendChild(row);
+}
+
+function addNewParam(mode) { addParamRow(mode, '', ''); }
+
+renderMode('gpu');
+renderMode('cpu');
+
+function resetToDefaults() {
+    if (confirm('Reset to default parameters?')) {
+        window.location.href = '/reset-to-defaults?path=' + encodeURIComponent('{{model_path}}');
+    }
+}
+</script>
+
+</body>
+</html>

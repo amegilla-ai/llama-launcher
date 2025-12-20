@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Run Command - {{model_name}}</title>
+ <style>
+    body { background: #f1f5f9; }
+    .card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+    }
+    .command-container {
+        background: #0f172a; /* Dark terminal look for the command only */
+        border-radius: 10px;
+        padding: 24px;
+        color: #e2e8f0;
+        position: relative;
+    }
+    .mode-badge {
+        background: #e0e7ff;
+        color: #4338ca;
+        padding: 5px 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    .btn-copy {
+        background: #4f46e5;
+        padding: 14px 40px;
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <h2>{{model_name}}</h2>
+            <div>
+                <span class="mode-badge">{{mode}}</span>
+                <span class="mode-badge">{{binary_type}}</span>
+            </div>
+        </div>
+
+        <div class="command-container">
+            <div class="copy-indicator" id="copyIndicator">Copied!</div>
+            <div class="command-text" id="commandText">{{command}}</div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-copy" onclick="copyCommand()">📋 Copy Command</button>
+            <a href="/" class="btn btn-cancel">Cancel</a>
+        </div>
+
+        <div class="info-text">
+            Copy this command to run in your terminal (page will auto-close)
+        </div>
+    </div>
+</div>
+
+<script>
+function copyCommand() {
+    const commandText = document.getElementById('commandText').textContent;
+    const indicator = document.getElementById('copyIndicator');
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(commandText).then(function() {
+        // Show success indicator
+        indicator.classList.add('show');
+        
+        // Close window after short delay
+        setTimeout(function() {
+            window.location.href = '/';
+        }, 800);
+    }).catch(function(err) {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = commandText;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+            document.execCommand('copy');
+            indicator.classList.add('show');
+            setTimeout(function() {
+                window.location.href = '/';
+            }, 800);
+        } catch (err) {
+            alert('Failed to copy command. Please copy manually.');
+        }
+        
+        document.body.removeChild(textarea);
+    });
+}
+
+// Allow keyboard shortcut (Ctrl/Cmd + C when focused on page)
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !window.getSelection().toString()) {
+        copyCommand();
+    }
+});
+</script>
+
+</body>
+</html>
