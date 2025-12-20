@@ -35,8 +35,10 @@ The app uses a flexible parameter system where you define **Flags** (e.g., `-c`)
 ---
 
 ### 🖥️ Getting Started
-
-1. **Scan**: Open the app to let it index your model folders.
+0. **Run & Scan** Run app.py
+1. **View**: Open the URL (http://127.0.0.1:5000) to see the models discovered.
 2. **Configure**: Click **Edit Params** on a model to tune its performance or use **Edit Defaults** for global settings.
-3. **Launch**: Select a launch mode (e.g., **Server GPU**). The app will generate the command.
+3. **Launch**: Select a launch mode (e.g., **Server GPU**). The app will generate the command text.
 4. **Execute**: Click **Copy Command** and paste it into your terminal to start the model.
+
+** Please note:** for security reasons this app doesn't launch the model, it just gives you the full command to run it in your terminal.
