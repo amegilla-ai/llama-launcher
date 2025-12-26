@@ -1,0 +1,465 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Launcher Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            color: #333;
+            margin: 0;
+            padding: 1rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .header-left h1 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1.8rem;
+            color: #2d3748;
+        }
+        
+        .header-left p {
+            margin: 0;
+            color: #718096;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            background: #4f46e5;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+        }
+        
+        .main-content {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .main-content h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.2rem;
+            color: #2d3748;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat {
+            text-align: center;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 6px;
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+        
+        .actions {
+            display: grid;
+            gap: 0.75rem;
+        }
+        
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #4a5568;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+        
+        .action-icon {
+            font-size: 1.2rem;
+        }
+        
+        .action-text {
+            font-weight: 500;
+        }
+        
+        .main-content {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .main-content h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.2rem;
+            color: #2d3748;
+        }
+        
+        .folder-section {
+            margin-bottom: 2rem;
+        }
+        
+        .folder-heading {
+            margin: 0 0 1rem 0;
+            font-size: 1.1rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .models-table-container {
+            overflow-x: auto;
+        }
+        
+        .models-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        
+        .models-table th {
+            background: #f7fafc;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .models-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+        
+        .models-table tr:hover {
+            background: #f7fafc;
+        }
+        
+        .model-info {
+            min-width: 200px;
+        }
+        
+        .model-name {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .model-dir {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .params {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            max-width: 300px;
+        }
+        
+        .param {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+        
+        .models-table th:nth-child(1),
+        .models-table td:nth-child(1) {
+            width: 15%;
+        }
+        
+        .models-table th:nth-child(2),
+        .models-table td:nth-child(2) {
+            width: 8%;
+        }
+        
+        .models-table th:nth-child(3),
+        .models-table td:nth-child(3) {
+            width: 30%;
+        }
+        
+        .models-table th:nth-child(4),
+        .models-table td:nth-child(4) {
+            width: 22%;
+        }
+        
+        .models-table th:nth-child(5),
+        .models-table td:nth-child(5) {
+            width: 15%;
+        }
+        
+        .models-table th:last-child,
+        .models-table td:last-child {
+            width: 10%;
+            min-width: 100px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            white-space: nowrap;
+            justify-content: flex-start;
+        }
+        
+        .edit-btn {
+            background: #667eea;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .edit-btn:hover {
+            background: #5a67d8;
+        }
+        
+        .delete-btn {
+            background: #e53e3e;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .delete-btn:hover {
+            background: #c53030;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .models-section {
+            margin-top: 3rem;
+        }
+        
+        .models-section h2 {
+            color: white;
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .model-group {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .model-group h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .model-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 0.75rem;
+        }
+        
+        .model-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
+            display: block;
+        }
+        
+        .model-item:hover {
+            background: #edf2f7;
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+        
+        .model-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .model-size {
+            font-size: 0.85rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Model Launcher</h1>
+                <p>{{ total_models }} models in {{ groups|length }} directories</p>
+            </div>
+            <div class="header-actions">
+                <a href="{{ url_for('scan') }}" class="action-btn">
+                    <span>Scan for Models</span>
+                </a>
+                <a href="{{ url_for('defaults') }}" class="action-btn">
+                    <span>Default Parameters</span>
+                </a>
+                <a href="{{ url_for('folders') }}" class="action-btn">
+                    <span>Folders to Scan</span>
+                </a>
+                <a href="{{ url_for('static_page') }}" target="_blank" class="action-btn">
+                    <span>Launch Commands</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            {% if groups %}
+            <h2>Models</h2>
+            {% for dir_name, models in groups.items() %}
+            <div class="folder-section">
+                <h3 class="folder-heading">📁 {{ dir_name }} ({{ models|length }} models)</h3>
+                <div class="models-table-container">
+                    <table class="models-table">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Size</th>
+                                <th>Common Parameters</th>
+                                <th>Server Parameters</th>
+                                <th>CLI Parameters</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model in models %}
+                            <tr>
+                                <td>
+                                    <div class="model-name">{{ model.model_name }}</div>
+                                </td>
+                                <td>{{ model.file_size }}</td>
+                                <td>
+                                    <div class="params">
+                                        {% for key, values in model.parsed_params.common.items() %}
+                                        <span class="param">{{ key }}{% if values.gpu or values.cpu %} (GPU: {{ values.gpu or 'none' }}, CPU: {{ values.cpu or 'none' }}){% endif %}</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="params">
+                                        {% for key, values in model.parsed_params.server.items() %}
+                                        <span class="param">{{ key }}{% if values.gpu or values.cpu %} (GPU: {{ values.gpu or 'none' }}, CPU: {{ values.cpu or 'none' }}){% endif %}</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="params">
+                                        {% for key, values in model.parsed_params.cli.items() %}
+                                        <span class="param">{{ key }}{% if values.gpu or values.cpu %} (GPU: {{ values.gpu or 'none' }}, CPU: {{ values.cpu or 'none' }}){% endif %}</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{{ url_for('edit', path=model.model_path) }}" class="edit-btn">Edit</a>
+                                        <a href="{{ url_for('delete_model', path=model.model_path) }}" 
+                                           class="delete-btn" 
+                                           onclick="return confirm('Delete {{ model.model_name }}?')">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <h2>No Models Found</h2>
+            <p>Configure scan folders and click "Scan Models" to get started.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

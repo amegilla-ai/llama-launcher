@@ -1,0 +1,86 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Model Launcher</title>
+  <link rel="stylesheet" href="{{ css_url }}">
+</head>
+<body>
+<div class="container">
+  <h1>Model Launcher</h1>
+
+  {% if not model_groups %}
+    <p class="empty">No models found.</p>
+  {% else %}
+    {% for directory, models in model_groups.items() %}
+      <section class="group">
+        <h2 class="group-title">{{ directory }} ({{ models|length }})</h2>
+
+        {% for m in models %}
+          <article class="model-card">
+            <header class="model-header">
+              <strong class="model-name">{{ m.model_name }}</strong>
+              <span class="size">{{ m.file_size }}</span>
+            </header>
+            <p class="path">{{ m.model_path }}</p>
+
+            <!-- --------------------------------------------------------
+                 Command blocks – 4 combinations: GPU/CPU × Server/CLI
+                 -------------------------------------------------------- -->
+            <div class="cmd-blocks">
+              {% for mode in ["gpu","cpu"] %}
+                {% for bin in ["server","cli"] %}
+                  {% set binary_path = (bin == "server") and SERVER_BIN or CLI_BIN %}
+                  
+                  {# Build parameter string from common + specific sections #}
+                  {% set param_parts = [] %}
+                  
+                  {# Add common parameters #}
+                  {% for key, values in m.params.common.items() %}
+                    {% set value = values[mode] %}
+                    {% if value %}
+                      {% set _ = param_parts.append(key + " " + value) %}
+                    {% else %}
+                      {% set _ = param_parts.append(key) %}
+                    {% endif %}
+                  {% endfor %}
+                  
+                  {# Add section-specific parameters (server or cli) #}
+                  {% for key, values in m.params[bin].items() %}
+                    {% set value = values[mode] %}
+                    {% if value %}
+                      {% set _ = param_parts.append(key + " " + value) %}
+                    {% else %}
+                      {% set _ = param_parts.append(key) %}
+                    {% endif %}
+                  {% endfor %}
+                  
+                  {% set param_str = param_parts|join(' ') %}
+                  {% set full_cmd = binary_path + " -m " + m.model_path + " " + param_str %}
+
+                  <div class="cmd-row">
+                    <span class="cmd-label">{{ mode|upper }} {{ bin|upper }}</span>
+                    <button class="copy-btn" data-cmd="{{ full_cmd }}" aria-label="Copy command">
+                      <svg viewBox="0 0 24 24"><use href="#copy-icon"/></svg>
+                    </button>
+                    <code class="cmd">{{ full_cmd }}</code>
+                  </div>
+                {% endfor %}
+              {% endfor %}
+            </div>
+
+          </article>
+        {% endfor %}
+      </section>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<!-- Inline copy‑icon sprite (same as before) -->
+<svg style="display:none;">
+  <symbol id="copy-icon" viewBox="0 0 24 24">
+    <path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 18H8V7h11v16z"/>
+  </symbol>
+</svg>
+
+<script src="{{ js_url }}"></script>
+</body>

@@ -1,0 +1,338 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Default Parameters</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --bg:#f8fafc; --card:#ffffff; --primary:#4f46e5;
+            --primary-light:#e0e7ff; --text:#1e293b; --muted:#64748b;
+            --border:#e2e8f0; --gpu:#6366f1; --cpu:#10b981;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{
+            font-family: 'Inter', system-ui, sans-serif;
+            background:var(--bg); color:var(--text);
+        }
+        .container{
+            max-width:960px; margin:1.5rem auto; padding:0 1rem;
+        }
+        h2{
+            font-size:1.4rem; font-weight:600; color:var(--primary);
+            margin-bottom:.4rem;
+        }
+        .split-container{
+            display:grid; grid-template-columns:1fr 1fr; gap:1rem;
+        }
+        .mode-section{
+            background:var(--card); border:1px solid var(--border);
+            border-radius:.8rem; padding:.8rem .9rem;
+            box-shadow:0 2px 5px rgba(0,0,0,.04);
+        }
+        .mode-header{
+            font-weight:600; margin-bottom:.3rem; padding-bottom:.2rem;
+            border-bottom:2px solid var(--bg);
+            display:flex; align-items:center; gap:.5rem;
+        }
+
+        table{width:100%; border-collapse:separate; border-spacing:0 4px;}
+        th{
+            text-align:left; font-size:.75rem; text-transform:uppercase;
+            letter-spacing:.05em; color:var(--muted); padding:0 4px 4px;
+        }
+        td{padding:0 4px;}
+        input{
+            width:100%; padding:.4rem .6rem; border:1px solid var(--border);
+            border-radius:6px; background:#fff; font-size:.88rem;
+            color:var(--text); transition:border-color .2s;
+        }
+        textarea{
+            width:100%; padding:.4rem .6rem; border:1px solid var(--border);
+            border-radius:6px; background:#fff; font-size:.88rem;
+            color:var(--text); transition:border-color .2s; resize:vertical;
+            height:2.2rem; font-family:inherit;
+        }
+        textarea:focus{
+            outline:none; border-color:var(--primary);
+            box-shadow:0 0 0 2px var(--primary-light);
+        }
+        .btn-add{
+            margin-top:.5rem; background:var(--bg); color:var(--primary);
+            border:1px dashed var(--border); border-radius:6px;
+            padding:.4rem .8rem; font-size:.85rem; cursor:pointer;
+            transition:background .2s, border-color .2s;
+        }
+        .btn-add:hover{
+            background:var(--primary-light); border-color:var(--primary);
+        }
+        .actions{
+            margin-top:1rem; display:flex; gap:.8rem;
+        }
+        .btn-save{
+            background:var(--primary); color:#fff; border:none;
+            border-radius:6px; padding:.5rem 1.2rem;
+            font-weight:600; cursor:pointer;
+        }
+        .back-link{
+            align-self:center; color:var(--muted);
+            text-decoration:none; font-size:.9rem;
+        }
+        .empty-state{
+            text-align:center; color:var(--muted);
+            font-style:italic; padding:1rem 0;
+        }
+        .modal{
+            display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+            background:rgba(0,0,0,0.5); z-index:1000;
+        }
+        .modal-content{
+            background:white; margin:5% auto; padding:1rem; width:80%; max-width:800px;
+            border-radius:8px; max-height:80vh; overflow-y:auto;
+        }
+        .param-item{
+            padding:0.5rem; border:1px solid var(--border); margin:0.25rem 0;
+            border-radius:4px; cursor:pointer; transition:background 0.2s;
+        }
+        .param-item:hover{background:var(--bg);}
+        .param-name{font-weight:600; color:var(--primary);}
+        .param-desc{font-size:0.85rem; color:var(--muted); margin-top:0.25rem;}
+        .btn-generate{
+            background:var(--primary); color:#fff; border:none;
+            border-radius:6px; padding:.4rem .8rem; font-size:.85rem;
+            cursor:pointer; margin-left:0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Default Parameters</h2>
+    <p class="note" style="margin-bottom: 1.5rem;">These defaults are applied automatically to any newly discovered model.</p>
+
+    <form method="POST" action="/save-defaults" id="defaultsForm">
+    <form method="POST" action="/save-defaults" id="defaultsForm">
+        <!-- Common Parameters -->
+        <div class="mode-section" style="margin-bottom: 1rem;">
+            <div class="mode-header">Common Parameters</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:15%">Parameter</th>
+                        <th style="width:10%">GPU Value</th>
+                        <th style="width:10%">CPU Value</th>
+                        <th style="width:55%">Comment</th>
+                        <th style="width:5%"></th>
+                    </tr>
+                </thead>
+                <tbody id="param-area-common"></tbody>
+            </table>
+            <button type="button" class="btn-add" onclick="addNewParam('common')">+ Add Common</button>
+            <button type="button" class="btn-add" onclick="showParamModal('common')" style="margin-left: 0.5rem;">Add from Llama.cpp</button>
+        </div>
+
+        <!-- Server Parameters -->
+        <div class="mode-section" style="margin-bottom: 1rem;">
+            <div class="mode-header">Server Parameters</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:15%">Parameter</th>
+                        <th style="width:10%">GPU Value</th>
+                        <th style="width:10%">CPU Value</th>
+                        <th style="width:55%">Comment</th>
+                        <th style="width:5%"></th>
+                    </tr>
+                </thead>
+                <tbody id="param-area-server"></tbody>
+            </table>
+            <button type="button" class="btn-add" onclick="addNewParam('server')">+ Add Server</button>
+            <button type="button" class="btn-add" onclick="showParamModal('server')" style="margin-left: 0.5rem;">Add from Llama.cpp</button>
+        </div>
+
+        <!-- CLI Parameters -->
+        <div class="mode-section" style="margin-bottom: 1rem;">
+            <div class="mode-header">CLI Parameters</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:15`%">Parameter</th>
+                        <th style="width:10%">GPU Value</th>
+                        <th style="width:10%">CPU Value</th>
+                        <th style="width:55%">Comment</th>
+                        <th style="width:5%"></th>
+                    </tr>
+                </thead>
+                <tbody id="param-area-cli"></tbody>
+            </table>
+            <button type="button" class="btn-add" onclick="addNewParam('cli')">+ Add CLI</button>
+            <button type="button" class="btn-add" onclick="showParamModal('cli')" style="margin-left: 0.5rem;">Add from Llama.cpp</button>
+        </div>
+
+        <div class="actions">
+            <button type="submit" class="btn-save">Save Defaults</button>
+            <form method="POST" action="/generate-param-refs" style="display:inline;">
+                <button type="submit" class="btn-generate">Generate Parameter References</button>
+            </form>
+            <a href="/" class="back-link">Cancel</a>
+        </div>
+    </form>
+
+    <!-- Parameter Selection Modal -->
+    <div id="paramModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Select Parameter</h3>
+            <div id="paramList"></div>
+            <div style="margin-top: 1rem;">
+                <button type="button" onclick="closeParamModal()" class="back-link">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* --------------------------------------------------------------
+   Grab the defaults dict that Flask passed.
+   If for any reason the variable is missing we fallback to {}.
+   -------------------------------------------------------------- */
+const defaultsData = {{ defaults|tojson|default('{}')|safe }};
+const defaultParams = defaultsData.params || defaultsData;
+const defaultComments = defaultsData.comments || {common: {}, server: {}, cli: {}};
+
+function renderMode(mode){
+    const tbody = document.getElementById(`param-area-${mode}`);
+    tbody.innerHTML = "";
+
+    const cfg = defaultParams[mode] || {};
+    const comments = defaultComments[mode] || {};
+    const keys = Object.keys(cfg);
+
+    if (keys.length===0){
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No default parameters</td></tr>';
+        return;
+    }
+
+    keys.forEach(k => {
+        const paramData = cfg[k];
+        const gpuVal = paramData.gpu || '';
+        const cpuVal = paramData.cpu || '';
+        const comment = comments[k] || '';
+        addParamRow(mode, k, gpuVal, cpuVal, comment);
+    });
+}
+
+function addParamRow(mode, key = '', gpuValue = '', cpuValue = '', comment = ''){
+    const tbody = document.getElementById(`param-area-${mode}`);
+    const row = document.createElement('tr');
+
+    const uid = `${mode}_${Date.now()}_${Math.random()}`;
+
+    const tdKey = document.createElement('td');
+    const inputKey = document.createElement('input');
+    inputKey.name = `k_${uid}`;
+    inputKey.value = key;
+    inputKey.placeholder = "-c, --port";
+    tdKey.appendChild(inputKey);
+
+    const tdGpuVal = document.createElement('td');
+    const inputGpuVal = document.createElement('input');
+    inputGpuVal.name = `vg_${uid}`;
+    inputGpuVal.value = gpuValue;
+    inputGpuVal.placeholder = "...";
+    tdGpuVal.appendChild(inputGpuVal);
+
+    const tdCpuVal = document.createElement('td');
+    const inputCpuVal = document.createElement('input');
+    inputCpuVal.name = `vc_${uid}`;
+    inputCpuVal.value = cpuValue;
+    inputCpuVal.placeholder = "...";
+    tdCpuVal.appendChild(inputCpuVal);
+
+    const tdComment = document.createElement('td');
+    const textareaComment = document.createElement('textarea');
+    textareaComment.name = `c_${uid}`;
+    textareaComment.value = comment;
+    textareaComment.placeholder = "Optional comment...";
+    textareaComment.maxLength = 250;
+    tdComment.appendChild(textareaComment);
+
+    const tdDel = document.createElement('td');
+    const delBtn = document.createElement('button');
+    delBtn.type = "button";
+    delBtn.textContent = "×";
+    delBtn.style.background = "none";
+    delBtn.style.border = "none";
+    delBtn.style.cursor = "pointer";
+    delBtn.style.fontSize = "1.2rem";
+    delBtn.onclick = () => row.remove();
+    tdDel.appendChild(delBtn);
+
+    row.appendChild(tdKey);
+    row.appendChild(tdGpuVal);
+    row.appendChild(tdCpuVal);
+    row.appendChild(tdComment);
+    row.appendChild(tdDel);
+    tbody.appendChild(row);
+}
+
+function addNewParam(mode){
+    addParamRow(mode, '', '', '', '');
+}
+
+/* Initialise all sections on page load */
+['common', 'server', 'cli'].forEach(m => renderMode(m));
+
+/* Parameter modal functionality */
+const paramRefs = {{ param_refs|tojson|safe }};
+let currentModalMode = '';
+
+function showParamModal(mode) {
+    currentModalMode = mode;
+    const modal = document.getElementById('paramModal');
+    const title = document.getElementById('modalTitle');
+    const list = document.getElementById('paramList');
+    
+    title.textContent = `Add ${mode.charAt(0).toUpperCase() + mode.slice(1)} Parameter`;
+    list.innerHTML = '';
+    
+    const params = paramRefs[mode] || {};
+    const keys = Object.keys(params);
+    
+    if (keys.length === 0) {
+        list.innerHTML = '<p>No parameters available. Generate parameter references first.</p>';
+    } else {
+        keys.forEach(param => {
+            const item = document.createElement('div');
+            item.className = 'param-item';
+            item.onclick = () => selectParam(param, params[param]);
+            item.innerHTML = `
+                <div class="param-name">${param}</div>
+                <div class="param-desc">${params[param]}</div>
+            `;
+            list.appendChild(item);
+        });
+    }
+    
+    modal.style.display = 'block';
+}
+
+function closeParamModal() {
+    document.getElementById('paramModal').style.display = 'none';
+}
+
+function selectParam(param, description) {
+    addParamRow(currentModalMode, param, '', '', description);
+    closeParamModal();
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('paramModal');
+    if (event.target === modal) {
+        closeParamModal();
+    }
+}
+</script>
+
+</body>

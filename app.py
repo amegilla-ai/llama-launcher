@@ -1,416 +1,242 @@
 #!/usr/bin/env python3
-import os
+"""
+Flask admin interface for managing GGUF model configurations.
+"""
 import json
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
+
+from shared.config import ADMIN_TEMPLATES, STATIC_OUTPUT, DB_PATH
+from shared.utils import (
+    init_db, scan_models, get_all_models, load_defaults, save_defaults,
+    load_scan_cfg, save_scan_cfg, group_models_by_directory, render_static_page,
+    get_model_config, update_model_config, generate_param_references, load_param_references
+)
+
 import sqlite3
-import pickle
-from pathlib import Path
-from collections import defaultdict
-from flask import Flask, render_template, request, redirect
 
-app = Flask(__name__)
-DB_PATH = os.path.expanduser("~/models/model_params.db")
-DEFAULTS_PATH = os.path.expanduser("~/models/defaults.pkl")
-FOLDERS_PATH = os.path.expanduser("~/models/folders.pkl")
+app = Flask(__name__, template_folder=str(ADMIN_TEMPLATES))
+app.secret_key = "dev-secret"  # Change for production
 
-# UPDATED: Only GPU and CPU modes
-DEFAULT_PARAMS = {
-    "gpu": {
-        "-c": "16384",
-        "--flash-attn": "on",
-        "--no-mmap": ""
-    },
-    "cpu": {
-        "-c": "16384",
-        "--no-mmap": ""
-    },
-}
 
-# Default folders to scan
-DEFAULT_FOLDERS = [
-    "~/.cache",
-    "~/ComfyUI",
-]
-
-def db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-def init_db():
-    # Ensure the directory exists
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    
-    conn = db()
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS model_configs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            model_path TEXT UNIQUE,
-            model_name TEXT,
-            params_json TEXT
-        );
-    """)
-    conn.commit()
-    conn.close()
-
-# ADDED: Functions for default parameters
-def load_defaults():
-    """Load default parameters from file, or return built-in defaults"""
-    if os.path.exists(DEFAULTS_PATH):
-        try:
-            with open(DEFAULTS_PATH, 'rb') as f:
-                return pickle.load(f)
-        except:
-            pass
-    return DEFAULT_PARAMS.copy()
-
-def save_defaults(defaults):
-    """Save default parameters to file"""
-    os.makedirs(os.path.dirname(DEFAULTS_PATH), exist_ok=True)
-    with open(DEFAULTS_PATH, 'wb') as f:
-        pickle.dump(defaults, f)
-
-def load_folders():
-    """Load scan folders from file, or return default folders"""
-    if os.path.exists(FOLDERS_PATH):
-        try:
-            with open(FOLDERS_PATH, 'rb') as f:
-                folders = pickle.load(f)
-                # Filter out empty strings
-                return [f for f in folders if f.strip()]
-        except:
-            pass
-    return DEFAULT_FOLDERS.copy()
-
-def save_folders(folders):
-    """Save scan folders to file"""
-    os.makedirs(os.path.dirname(FOLDERS_PATH), exist_ok=True)
-    with open(FOLDERS_PATH, 'wb') as f:
-        pickle.dump(folders, f)
-
-# UPDATED: Now uses load_folders()
-def scan_models():
-    """Scan configured folders for .gguf files"""
-    home = Path.home()
-    
-    # Load configured folders
-    folder_list = load_folders()
-    search_dirs = []
-    
-    for folder in folder_list:
-        # Expand ~ and environment variables
-        expanded = os.path.expanduser(os.path.expandvars(folder))
-        path = Path(expanded)
-        if path.exists():
-            search_dirs.append(path)
-        else:
-            print(f"Warning: Folder does not exist: {folder}")
-
-    found = []
-    for base in search_dirs:
-        if base.exists():
-            for root, dirs, files in os.walk(base):
-                for f in files:
-                    if f.endswith(".gguf"):
-                        full = os.path.join(root, f)
-                        found.append((f, full))
-
-    # Load current defaults (either saved or built-in)
-    current_defaults = load_defaults()
-
-    conn = db()
+def rebuild_static():
+    """Regenerate static site from current database."""
     try:
-        for name, path in found:
-            exists = conn.execute(
-                "SELECT id FROM model_configs WHERE model_path=?",
-                (path,)
-            ).fetchone()
+        groups = group_models_by_directory(get_all_models())
+        render_static_page(groups)
+    except Exception as e:
+        print(f"❗ Failed to rebuild static page: {e}")
 
-            if not exists:
-                conn.execute(
-                    "INSERT INTO model_configs (model_path, model_name, params_json) VALUES (?,?,?)",
-                    (path, name, json.dumps(current_defaults))
-                )
-        conn.commit()
-    finally:
-        conn.close()
 
-# UPDATED: Added try/finally for connection management
-def get_all_models():
-    conn = db()
-    try:
-        return conn.execute("SELECT * FROM model_configs").fetchall()
-    finally:
-        conn.close()
-
-def load_model_config(path):
-    conn = db()
-    try:
-        row = conn.execute(
-            "SELECT params_json FROM model_configs WHERE model_path=?",
-            (path,)
-        ).fetchone()
-        if not row:
-            return None
-        return json.loads(row["params_json"])
-    finally:
-        conn.close()
-
-def save_model_config(path, config):
-    conn = db()
-    try:
-        conn.execute(
-            "UPDATE model_configs SET params_json=? WHERE model_path=?",
-            (json.dumps(config), path)
-        )
-        conn.commit()
-    finally:
-        conn.close()
-
-# ADDED: Helper function to format file size
-def format_file_size(size_bytes):
-    """Format file size in human-readable format"""
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if size_bytes < 1024.0:
-            return f"{size_bytes:.1f} {unit}"
-        size_bytes /= 1024.0
-    return f"{size_bytes:.1f} PB"
-
-# ADDED: Helper function for grouping models
-def group_models_by_directory(models):
-    """Group models by their parent directory and add file size"""
-    grouped = defaultdict(list)
+def parse_form_pairs(form_data):
+    """Parse key-value pairs from form data with k_, vg_, vc_, and c_ prefixes."""
+    pairs = {}
+    for key, value in form_data.items():
+        if key.startswith(("k_", "vg_", "vc_", "c_")):
+            uid = key[2:] if key.startswith("k_") else key[3:]
+            pairs.setdefault(uid, {})[key.split("_")[0]] = value.strip()
     
-    for model in models:
-        path = model["model_path"]
-        # Get the parent directory
-        parent_dir = os.path.dirname(path)
-        # Use the last part of the directory path as the key
-        dir_name = os.path.basename(parent_dir) if parent_dir else "root"
-        
-        # Add file size to model dict
-        model_dict = dict(model)
-        if os.path.exists(path):
-            size_bytes = os.path.getsize(path)
-            model_dict['file_size'] = format_file_size(size_bytes)
-        else:
-            model_dict['file_size'] = 'N/A'
-        
-        grouped[dir_name].append(model_dict)
+    result = {"common": {}, "server": {}, "cli": {}}
+    comments = {"common": {}, "server": {}, "cli": {}}
     
-    # Sort by directory name
-    return dict(sorted(grouped.items()))
+    for uid, pair in pairs.items():
+        if "k" in pair and ("vg" in pair or "vc" in pair) and pair["k"]:
+            # Extract section and parameter name
+            parts = uid.split("_", 1)
+            if len(parts) == 2:
+                section, _ = parts
+                if section in result:
+                    param_name = pair["k"]
+                    gpu_val = pair.get("vg", "")
+                    cpu_val = pair.get("vc", "")
+                    
+                    result[section][param_name] = {"gpu": gpu_val, "cpu": cpu_val}
+                    
+                    if "c" in pair and pair["c"]:
+                        comments[section][param_name] = pair["c"]
+    
+    return result, comments
 
-# ADDED: Custom Jinja filter
-@app.template_filter('dirname')
-def dirname_filter(path):
-    """Extract directory name from path"""
-    return os.path.dirname(path)
 
-# UPDATED: Now uses grouping
+# Routes
 @app.route("/")
-def index():
-    scan_models()
-    models = get_all_models()
-    model_groups = group_models_by_directory(models)
-    return render_template("index.html", model_groups=model_groups)
+def admin_home():
+    groups = group_models_by_directory(get_all_models())
+    
+    # Parse JSON parameters for display
+    for models in groups.values():
+        for model in models:
+            try:
+                params = json.loads(model["params_json"])
+                
+                # Handle old format migration for display
+                if "gpu" in params and "cpu" in params:
+                    # Old format - convert for display
+                    old_params = params
+                    new_params = {"common": {}, "server": {}, "cli": {}}
+                    
+                    # Migrate old GPU/CPU structure to new common structure for display
+                    all_keys = set()
+                    if "gpu" in old_params:
+                        all_keys.update(old_params["gpu"].keys())
+                    if "cpu" in old_params:
+                        all_keys.update(old_params["cpu"].keys())
+                    
+                    for key in all_keys:
+                        gpu_val = old_params.get("gpu", {}).get(key, "")
+                        cpu_val = old_params.get("cpu", {}).get(key, "")
+                        new_params["common"][key] = {"gpu": gpu_val, "cpu": cpu_val}
+                    
+                    model["parsed_params"] = new_params
+                else:
+                    model["parsed_params"] = params
+                    
+            except json.JSONDecodeError:
+                model["parsed_params"] = {"common": {}, "server": {}, "cli": {}}
+    
+    defaults_data = load_defaults()
+    return render_template(
+        "admin_index.html",
+        groups=groups,
+        total_models=sum(len(models) for models in groups.values()),
+        defaults=defaults_data["params"],
+        folders=load_scan_cfg().get("folders", [])
+    )
 
-# UPDATED: Now fetches model_name too
+
+@app.route("/scan")
+def scan():
+    scan_models()
+    rebuild_static()
+    flash("🔎 Scan completed and static page updated.")
+    return redirect(url_for("admin_home"))
+
+
 @app.route("/edit")
 def edit():
     path = request.args.get("path")
+    if not path:
+        flash("❗ No model path provided.")
+        return redirect(url_for("admin_home"))
     
-    conn = db()
-    try:
-        row = conn.execute(
-            "SELECT model_name, params_json FROM model_configs WHERE model_path=?",
-            (path,)
-        ).fetchone()
-        
-        if not row:
-            return "Model not found", 404
-            
-        model_name = row["model_name"]
-        config = json.loads(row["params_json"])
-        
-        return render_template("edit.html", 
-                             model_path=path, 
-                             model_name=model_name,
-                             model_config=config)
-    finally:
-        conn.close()
+    config = get_model_config(path)
+    if not config:
+        flash("❗ Model not found.")
+        return redirect(url_for("admin_home"))
+    
+    defaults_data = load_defaults()
+    config["defaults"] = defaults_data["params"]
+    config["default_comments"] = defaults_data["comments"]
+    config["param_refs"] = load_param_references()
+    
+    return render_template("edit.html", **config)
+
 
 @app.route("/save", methods=["POST"])
 def save():
     path = request.form.get("model_path")
-
-    model_config = load_model_config(path)
+    if not path:
+        flash("❗ No model path provided.")
+        return redirect(url_for("admin_home"))
     
-    # Reset both modes
-    model_config['gpu'] = {}
-    model_config['cpu'] = {}
-
-    # Build a mapping of unique IDs to key-value pairs
-    pairs = {}
-    for form_key, form_value in request.form.items():
-        if form_key.startswith("k_"):
-            # Extract the unique ID
-            uid = form_key[2:]
-            if uid not in pairs:
-                pairs[uid] = {}
-            pairs[uid]['key'] = form_value.strip()
-        elif form_key.startswith("v_"):
-            # Extract the unique ID
-            uid = form_key[2:]
-            if uid not in pairs:
-                pairs[uid] = {}
-            pairs[uid]['value'] = form_value.strip()
-
-    # Now build the config from the pairs
-    for uid, pair in pairs.items():
-        # Extract mode from uid (format: mode_timestamp_random)
-        mode = uid.split('_')[0]  # 'gpu' or 'cpu'
-        param_key = pair.get('key', '')
-        param_value = pair.get('value', '')
-        
-        # Only add if key is not empty and mode exists
-        if param_key and mode in model_config:
-            model_config[mode][param_key] = param_value
-
-    save_model_config(path, model_config)
-    return redirect("/")
-
-@app.route("/run")
-def run():
-    path = request.args.get("path")
-    mode = request.args.get("mode")  # gpu or cpu
-    binary_type = request.args.get("binary")  # server or cli
-
-    config = load_model_config(path)
+    new_params, new_comments = parse_form_pairs(request.form)
+    if update_model_config(path, new_params, new_comments):
+        rebuild_static()
+        flash("✅ Model parameters saved.")
+    else:
+        flash("❗ Failed to save model parameters.")
     
-    # Debug: print what we loaded
-    print(f"Loaded config for {path}: {config}")
-    print(f"Mode requested: {mode}")
-    
-    if not config or mode not in config:
-        return f"<pre>Error: No configuration found for mode '{mode}'</pre><a href='/'>Back</a>"
-    
-    cfg = config[mode]
-    
-    # Choose binary based on type
-    if binary_type == "server":
-        binary = "~/llama.cpp/build/bin/llama-server"
-    else:  # cli
-        binary = "~/llama.cpp/build/bin/llama-cli"
+    return redirect(url_for("admin_home"))
 
-    param_str = " ".join(f"{k} {v}".strip() for k, v in cfg.items())
-    cmd = f"{binary} -m {path} {param_str}"
 
-    # Get model name for display
-    conn = db()
-    try:
-        row = conn.execute(
-            "SELECT model_name FROM model_configs WHERE model_path=?",
-            (path,)
-        ).fetchone()
-        model_name = row["model_name"] if row else os.path.basename(path)
-    finally:
-        conn.close()
-
-    return render_template("run.html", 
-                         command=cmd, 
-                         model_name=model_name,
-                         mode=mode.upper(),
-                         binary_type=binary_type.upper())
-
-# ADDED: Routes for default parameters
 @app.route("/defaults")
 def defaults():
-    """Show page to edit default parameters"""
-    current_defaults = load_defaults()
-    return render_template("defaults.html", defaults=current_defaults)
+    return render_template("defaults.html", 
+                         defaults=load_defaults(),
+                         param_refs=load_param_references())
+
 
 @app.route("/save-defaults", methods=["POST"])
 def save_defaults_route():
-    """Save updated default parameters"""
-    new_defaults = {
-        "gpu": {},
-        "cpu": {}
-    }
-    
-    # Parse form data
-    pairs = {}
-    for form_key, form_value in request.form.items():
-        if form_key.startswith("k_"):
-            uid = form_key[2:]
-            if uid not in pairs:
-                pairs[uid] = {}
-            pairs[uid]['key'] = form_value.strip()
-        elif form_key.startswith("v_"):
-            uid = form_key[2:]
-            if uid not in pairs:
-                pairs[uid] = {}
-            pairs[uid]['value'] = form_value.strip()
-    
-    # Build defaults from pairs
-    for uid, pair in pairs.items():
-        # Extract mode from uid (format: mode_timestamp_random)
-        mode_parts = uid.split('_')
-        mode = mode_parts[0]  # Should be 'gpu' or 'cpu'
-        param_key = pair.get('key', '')
-        param_value = pair.get('value', '')
-        
-        if param_key and mode in new_defaults:
-            new_defaults[mode][param_key] = param_value
-    
-    # Debug: print what we're saving
-    print(f"Saving defaults: {new_defaults}")
-    
-    save_defaults(new_defaults)
-    return redirect("/")
+    new_params, new_comments = parse_form_pairs(request.form)
+    save_defaults(new_params, new_comments)
+    rebuild_static()
+    flash("✅ Default parameters saved.")
+    return redirect(url_for("admin_home"))
 
-@app.route("/reset-to-defaults")
-def reset_to_defaults():
-    """Reset a model's parameters to current defaults"""
-    path = request.args.get("path")
-    
-    if not path:
-        return redirect("/")
-    
-    # Load current defaults
-    current_defaults = load_defaults()
-    
-    # Save them to this model
-    save_model_config(path, current_defaults)
-    
-    # Redirect back to edit page
-    return redirect(f"/edit?path={path}")
 
 @app.route("/folders")
 def folders():
-    """Show page to edit scan folders"""
-    current_folders = load_folders()
-    return render_template("folders.html", folders=current_folders)
+    return render_template("folders.html", folders_cfg=load_scan_cfg())
+
 
 @app.route("/save-folders", methods=["POST"])
 def save_folders_route():
-    """Save updated scan folders"""
-    folders = request.form.getlist('folders[]')
+    cfg = {
+        "folders": [f.strip() for f in request.form.get("folders", "").splitlines() if f.strip()],
+        "llama_server_bin": request.form.get("server_bin", "").strip(),
+        "llama_cli_bin": request.form.get("cli_bin", "").strip()
+    }
     
-    # Filter out empty strings and strip whitespace
-    folders = [f.strip() for f in folders if f.strip()]
+    save_scan_cfg(cfg)
     
-    if not folders:
-        folders = DEFAULT_FOLDERS.copy()
-    
-    print(f"Saving folders: {folders}")
-    save_folders(folders)
-    
-    # Check if we should rescan
-    if request.form.get('rescan'):
+    if request.form.get("rescan"):
         scan_models()
     
-    return redirect("/")
+    rebuild_static()
+    flash("✅ Configuration saved.")
+    return redirect(url_for("admin_home"))
+
+
+@app.route("/delete")
+def delete_model():
+    path = request.args.get("path")
+    if not path:
+        flash("❗ No model path provided.")
+        return redirect(url_for("admin_home"))
+    
+    try:
+        with sqlite3.connect(str(DB_PATH)) as conn:
+            conn.execute("DELETE FROM model_configs WHERE model_path=?", (path,))
+        rebuild_static()
+        flash("✅ Model deleted from database.")
+    except Exception:
+        flash("❗ Failed to delete model.")
+    
+    return redirect(url_for("admin_home"))
+
+
+@app.route("/static-page")
+def static_page():
+    """Serve the generated static page."""
+    try:
+        static_file = STATIC_OUTPUT / "index.html"
+        if not static_file.exists():
+            rebuild_static()
+        return send_from_directory(str(STATIC_OUTPUT), "index.html")
+    except Exception:
+        flash("❗ Failed to load static page.")
+        return redirect(url_for("admin_home"))
+
+
+@app.route("/generate-param-refs", methods=["POST"])
+def generate_param_refs():
+    success, message = generate_param_references()
+    if success:
+        flash(f"✅ {message}")
+    else:
+        flash(f"❗ {message}")
+    return redirect(request.referrer or url_for("admin_home"))
+
+
+@app.route("/static_site/<path:filename>")
+def serve_static_assets(filename):
+    """Serve static site assets (CSS, JS)."""
+    from shared.config import PROJECT_ROOT
+    static_dir = PROJECT_ROOT / "static_site"
+    return send_from_directory(str(static_dir), filename)
+
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True)
+    rebuild_static()
+    app.run(debug=True, port=5001)
