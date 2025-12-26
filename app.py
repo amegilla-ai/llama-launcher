@@ -173,8 +173,10 @@ def folders():
 def save_folders_route():
     cfg = {
         "folders": [f.strip() for f in request.form.get("folders", "").splitlines() if f.strip()],
-        "llama_server_bin": request.form.get("server_bin", "").strip(),
-        "llama_cli_bin": request.form.get("cli_bin", "").strip()
+        "llama_server_gpu_bin": request.form.get("server_gpu_bin", "").strip(),
+        "llama_server_cpu_bin": request.form.get("server_cpu_bin", "").strip(),
+        "llama_cli_gpu_bin": request.form.get("cli_gpu_bin", "").strip(),
+        "llama_cli_cpu_bin": request.form.get("cli_cpu_bin", "").strip()
     }
     
     save_scan_cfg(cfg)
@@ -225,7 +227,7 @@ def generate_param_refs():
         flash(f"✅ {message}")
     else:
         flash(f"❗ {message}")
-    return redirect(request.referrer or url_for("admin_home"))
+    return redirect(request.referrer or url_for("defaults"))
 
 
 @app.route("/static_site/<path:filename>")

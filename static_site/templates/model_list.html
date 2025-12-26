@@ -29,7 +29,16 @@
             <div class="cmd-blocks">
               {% for mode in ["gpu","cpu"] %}
                 {% for bin in ["server","cli"] %}
-                  {% set binary_path = (bin == "server") and SERVER_BIN or CLI_BIN %}
+                  {# Select the appropriate binary based on mode and type #}
+                  {% if bin == "server" and mode == "gpu" %}
+                    {% set binary_path = SERVER_GPU_BIN %}
+                  {% elif bin == "server" and mode == "cpu" %}
+                    {% set binary_path = SERVER_CPU_BIN %}
+                  {% elif bin == "cli" and mode == "gpu" %}
+                    {% set binary_path = CLI_GPU_BIN %}
+                  {% else %}
+                    {% set binary_path = CLI_CPU_BIN %}
+                  {% endif %}
                   
                   {# Build parameter string from common + specific sections #}
                   {% set param_parts = [] %}

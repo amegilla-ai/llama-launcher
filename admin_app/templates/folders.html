@@ -27,17 +27,29 @@
     <h2>Scan Configuration</h2>
 
     <form method="POST" action="/save-folders">
-        <!-- ---- LLama binary paths ----------------------------------- -->
+        <!-- ---- llama.cpp binary paths ----------------------------------- -->
         <div class="field">
-            <label for="server_bin">LLaMA Server binary</label>
-            <input type="text" id="server_bin" name="server_bin"
-                   value="{{ folders_cfg.llama_server_bin|e }}">
+            <label for="server_gpu_bin">llama.cpp Server GPU binary</label>
+            <input type="text" id="server_gpu_bin" name="server_gpu_bin"
+                   value="{{ folders_cfg.llama_server_gpu_bin|e }}">
         </div>
 
         <div class="field">
-            <label for="cli_bin">LLaMA CLI binary</label>
-            <input type="text" id="cli_bin" name="cli_bin"
-                   value="{{ folders_cfg.llama_cli_bin|e }}">
+            <label for="server_cpu_bin">llama.cpp Server CPU binary</label>
+            <input type="text" id="server_cpu_bin" name="server_cpu_bin"
+                   value="{{ folders_cfg.llama_server_cpu_bin|e }}">
+        </div>
+
+        <div class="field">
+            <label for="cli_gpu_bin">llama.cpp CLI GPU binary</label>
+            <input type="text" id="cli_gpu_bin" name="cli_gpu_bin"
+                   value="{{ folders_cfg.llama_cli_gpu_bin|e }}">
+        </div>
+
+        <div class="field">
+            <label for="cli_cpu_bin">llama.cpp CLI CPU binary</label>
+            <input type="text" id="cli_cpu_bin" name="cli_cpu_bin"
+                   value="{{ folders_cfg.llama_cli_cpu_bin|e }}">
         </div>
 
         <!-- ---- Folder list ------------------------------------------ -->

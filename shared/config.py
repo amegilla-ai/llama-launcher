@@ -39,8 +39,10 @@ DEFAULT_PARAMS = {
 DEFAULT_FOLDERS = ["~/.cache", "~/ComfyUI"]
 DEFAULT_SCAN_CFG = {
     "folders": DEFAULT_FOLDERS,
-    "llama_server_bin": os.path.expanduser("~/llama.cpp/build/bin/llama-server"),
-    "llama_cli_bin":    os.path.expanduser("~/llama.cpp/build/bin/llama-cli")
+    "llama_server_gpu_bin": os.path.expanduser("~/llama.cpp/build/bin/llama-server"),
+    "llama_server_cpu_bin": os.path.expanduser("~/llama.cpp/build/bin/llama-server"),
+    "llama_cli_gpu_bin":    os.path.expanduser("~/llama.cpp/build/bin/llama-cli"),
+    "llama_cli_cpu_bin":    os.path.expanduser("~/llama.cpp/build/bin/llama-cli")
 }
 
 # ----------------------------------------------------------------------

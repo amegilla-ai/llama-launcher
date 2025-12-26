@@ -330,8 +330,10 @@ def render_static_page(model_groups):
         template = env.get_template("model_list.html")
         rendered = template.render(
             model_groups=model_groups,
-            SERVER_BIN=cfg.get("llama_server_bin", ""),
-            CLI_BIN=cfg.get("llama_cli_bin", ""),
+            SERVER_GPU_BIN=cfg.get("llama_server_gpu_bin", ""),
+            SERVER_CPU_BIN=cfg.get("llama_server_cpu_bin", ""),
+            CLI_GPU_BIN=cfg.get("llama_cli_gpu_bin", ""),
+            CLI_CPU_BIN=cfg.get("llama_cli_cpu_bin", ""),
             css_url="../../static_site/assets/style.css",
             js_url="../../static_site/assets/copy.js"
         )
@@ -360,20 +362,33 @@ def parse_help_output(help_text):
     
     for i, line in enumerate(lines):
         line = line.strip()
-        if not line or not line.startswith('-'):
+        if not line:
             continue
             
-        # Match patterns like: -c N, --ctx-size N    description here
-        match = re.match(r'^(-\w+(?:\s+\w+)?(?:,\s*--[\w-]+(?:\s+\w+)?)?)\s+(.+)$', line)
+        # Match patterns like: 
+        # -c N, --ctx-size N    description here
+        # --port PORT           description here  
+        # -h, --help            description here
+        match = re.match(r'^(-\w+(?:\s+\w+)?(?:,\s*--[\w-]+(?:\s+\w+)?)?|--[\w-]+(?:\s+\w+)?)\s+(.+)$', line)
         if match:
-            param_part = match.group(1)
+            param_part = match.group(1).strip()
             description = match.group(2).strip()
             
-            # Extract the main parameter (prefer long form)
+            # Extract the main parameter (prefer long form --param over -p)
             if '--' in param_part:
-                param = re.search(r'--[\w-]+', param_part).group()
+                # Find the long form parameter
+                long_match = re.search(r'--[\w-]+', param_part)
+                if long_match:
+                    param = long_match.group()
+                else:
+                    continue
             else:
-                param = re.search(r'-\w+', param_part).group()
+                # Only short form available
+                short_match = re.search(r'-\w+', param_part)
+                if short_match:
+                    param = short_match.group()
+                else:
+                    continue
                 
             params[param] = description
             
@@ -383,11 +398,17 @@ def parse_help_output(help_text):
 def generate_param_references():
     """Generate parameter reference files by parsing llama-server and llama-cli help."""
     cfg = load_scan_cfg()
-    server_bin = cfg.get("llama_server_bin", "")
-    cli_bin = cfg.get("llama_cli_bin", "")
+    server_gpu_bin = cfg.get("llama_server_gpu_bin", "")
+    server_cpu_bin = cfg.get("llama_server_cpu_bin", "")
+    cli_gpu_bin = cfg.get("llama_cli_gpu_bin", "")
+    cli_cpu_bin = cfg.get("llama_cli_cpu_bin", "")
+    
+    # Use GPU binaries for parameter discovery (they should have all parameters)
+    server_bin = server_gpu_bin or server_cpu_bin
+    cli_bin = cli_gpu_bin or cli_cpu_bin
     
     if not server_bin or not cli_bin:
-        return False, "Binary paths not configured"
+        return False, "Binary paths not configured. Please set paths in Folders to Scan."
     
     try:
         # Get help output from both binaries
@@ -427,6 +448,8 @@ def generate_param_references():
         
     except subprocess.TimeoutExpired:
         return False, "Timeout getting help output"
+    except FileNotFoundError:
+        return False, "Binary files not found. Check paths in Folders to Scan."
     except Exception as e:
         return False, f"Error: {str(e)}"
 
