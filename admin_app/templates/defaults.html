@@ -171,11 +171,13 @@
 
         <div class="actions">
             <button type="submit" class="btn-save">Save Defaults</button>
-            <form method="POST" action="/generate-param-refs" style="display:inline;">
-                <button type="submit" class="btn-generate">Generate Parameter References</button>
-            </form>
             <a href="/" class="back-link">Cancel</a>
         </div>
+    </form>
+
+    <!-- Generate Parameter References Form (outside main form) -->
+    <form method="POST" action="/generate-param-refs" style="margin-top: 1rem;">
+        <button type="submit" class="btn-generate">Generate Parameter References</button>
     </form>
 
     <!-- Parameter Selection Modal -->
