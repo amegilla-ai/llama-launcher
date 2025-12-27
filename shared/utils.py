@@ -414,22 +414,43 @@ def extract_parameters_via_llm(server_path, cli_path, llm_endpoint=DEFAULT_LLM_E
         return {"error": "Could not get help text from binaries"}
     
     # Create prompt for LLM
-    prompt = f"""Parse these llama.cpp help outputs and return ONLY valid JSON:
+    prompt = f"""You are a parameter extraction tool. Parse the llama.cpp help output and return ONLY valid JSON.
 
-SERVER HELP:
-{server_help[:2000]}
+SERVER HELP OUTPUT:
+{server_help}
 
-CLI HELP:  
-{cli_help[:2000]}
+CLI HELP OUTPUT:  
+{cli_help}
 
-Return JSON with this exact structure:
+Extract ALL parameters and categorize them by importance and usage. Return ONLY this JSON structure with NO other text:
+
 {{
-  "common": {{"--threads": "Number of threads", "-c": "Context size"}},
-  "server": {{"--port": "Server port", "--host": "Server host"}},
-  "cli": {{"--interactive": "Interactive mode", "--prompt": "Initial prompt"}}
+  "common": {{
+    "--threads": "Number of threads",
+    "-c": "Context size"
+  }},
+  "server": {{
+    "--port": "Server port",
+    "--host": "Server host"
+  }},
+  "cli": {{
+    "--interactive": "Interactive mode",
+    "--prompt": "Initial prompt"
+  }}
 }}
 
-Only include parameters that appear in the help text. Focus on the most important ones."""
+Categorization rules:
+- "common": Parameters that appear in BOTH server and CLI help (most important first)
+- "server": Parameters that appear ONLY in server help (most important first)  
+- "cli": Parameters that appear ONLY in CLI help (most important first)
+
+Within each category, order by importance:
+1. Essential parameters (context, threads, model loading)
+2. Performance parameters (batch size, memory settings)
+3. Behavior parameters (sampling, generation settings)
+4. Advanced/debug parameters
+
+Return ONLY the JSON object with NO other text, explanations, or markdown."""
     
     # Query LLM
     response = query_local_llm(prompt, llm_endpoint)
