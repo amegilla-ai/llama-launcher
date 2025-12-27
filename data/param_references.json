@@ -1,154 +1,592 @@
 {
-  "common": {
-    "-h": "--hf-token TOKEN                 Hugging Face access token (default: value from HF_TOKEN environment",
-    "--version": "show version and build info",
-    "-c": "--ctx-size-draft N               size of the prompt context for the draft model (default: 0, 0 = loaded",
-    "--completion-bash": "print source-able bash completion script for llama.cpp",
-    "--verbose-prompt": "print a verbose prompt before generation (default: false)",
-    "-t": "--threads-batch-draft N          number of threads to use during batch and prompt processing (default:",
-    "-C": "--cpu-range-batch lo-hi          ranges of CPUs for affinity. Complements --cpu-mask-batch",
-    "--cpu-strict": "use strict CPU placement (default: 0)",
-    "--prio": "set process/thread priority : low(-1), normal(0), medium(1), high(2),",
-    "--poll": "use polling level to wait for work (0 - no polling, default: 50)",
-    "--cpu-strict-batch": "use strict CPU placement (default: same as --cpu-strict)",
-    "--prio-batch": "set process/thread priority : 0-normal, 1-medium, 2-high, 3-realtime",
-    "--poll-batch": "use polling to wait for work (default: same as --poll)",
-    "-n": "keep the Mixture of Experts (MoE) weights of the first N layers in the",
-    "-b": "--batch-size N                   logical maximum batch size (default: 2048)",
-    "-u": "--ubatch-size N                  physical maximum batch size (default: 512)",
-    "--keep": "number of tokens to keep from the initial prompt (default: 0, -1 =",
-    "--swa-full": "use full-size SWA cache (default: false)",
-    "-f": "--flash-attn [on|off|auto]       set Flash Attention use ('on', 'off', or 'auto', default: 'auto')",
-    "--perf": "whether to enable internal libllama performance timings (default:",
-    "-e": "--escape                         process escapes sequences (\\n, \\r, \\t, \\', \\\", \\\\) (default: true)",
-    "--rope-scaling": "RoPE frequency scaling method, defaults to linear unless specified by",
-    "--rope-scale": "RoPE context scaling factor, expands context by a factor of N",
-    "--rope-freq-base": "RoPE base frequency, used by NTK-aware scaling (default: loaded from",
-    "--rope-freq-scale": "RoPE frequency scaling factor, expands context by a factor of 1/N",
-    "--yarn-orig-ctx": "YaRN: original context size of model (default: 0 = model training",
-    "--yarn-ext-factor": "YaRN: extrapolation mix factor (default: -1.0, 0.0 = full",
-    "--yarn-attn-factor": "YaRN: scale sqrt(t) or attention magnitude (default: -1.0)",
-    "--yarn-beta-slow": "YaRN: high correction dim or alpha (default: -1.0)",
-    "--yarn-beta-fast": "YaRN: low correction dim or beta (default: -1.0)",
-    "-k": "use single unified KV buffer for the KV cache of all sequences",
-    "--no-host": "bypass host buffer allowing extra buffers to be used",
-    "-d": "use default Qwen 2.5 Coder 1.5B (note: can download weights from the",
-    "--mlock": "force system to keep model in RAM rather than swapping or compressing",
-    "--mmap": "whether to memory-map model (if disabled, slower load but may reduce",
-    "--numa": "attempt optimizations that help on some NUMA systems",
-    "--list-devices": "print list of available devices and exit",
-    "-s": "--slot-prompt-similarity SIMILARITY",
-    "-m": "--model-vocoder FNAME            vocoder model for audio generation (default: unused)",
-    "--check-tensors": "check model tensor data for invalid values (default: false)",
-    "--override-kv": "advanced option to override model metadata by key. may be specified",
-    "--op-offload": "whether to offload host tensor operations to device (default: true)",
-    "--lora": "path to LoRA adapter (can be repeated to use multiple adapters)",
-    "--lora-scaled": "path to LoRA adapter with user defined scaling (can be repeated to use",
-    "--control-vector": "add a control vector",
-    "--control-vector-scaled": "add a control vector with user defined scaling SCALE",
-    "--log-disable": "Log disable",
-    "--log-file": "Log to file",
-    "--log-colors": "Set colored logging ('on', 'off', or 'auto', default: 'auto')",
-    "-v": "--verbose, --log-verbose         Set verbosity level to infinity (i.e. log all messages, useful for",
-    "--offline": "Offline mode: forces use of cache, prevents network access",
-    "-l": "--logit-bias TOKEN_ID(+/-)BIAS   modifies the likelihood of token appearing in the completion,",
-    "--log-prefix": "Enable prefix in log messages",
-    "--log-timestamps": "Enable timestamps in log messages",
-    "--samplers": "samplers that will be used for generation in the order, separated by",
-    "--ignore-eos": "ignore end of stream token and continue generating (implies",
-    "--temp": "temperature (default: 0.8)",
-    "--top-k": "top-k sampling (default: 40, 0 = disabled)",
-    "--top-p": "top-p sampling (default: 0.9, 1.0 = disabled)",
-    "--min-p": "min-p sampling (default: 0.1, 0.0 = disabled)",
-    "--top-nsigma": "top-n-sigma sampling (default: -1.0, -1.0 = disabled)",
-    "--xtc-probability": "xtc probability (default: 0.0, 0.0 = disabled)",
-    "--xtc-threshold": "xtc threshold (default: 0.1, 1.0 = disabled)",
-    "--typical": "locally typical sampling, parameter p (default: 1.0, 1.0 = disabled)",
-    "--repeat-last-n": "last n tokens to consider for penalize (default: 64, 0 = disabled, -1",
-    "--repeat-penalty": "penalize repeat sequence of tokens (default: 1.0, 1.0 = disabled)",
-    "--presence-penalty": "repeat alpha presence penalty (default: 0.0, 0.0 = disabled)",
-    "--frequency-penalty": "repeat alpha frequency penalty (default: 0.0, 0.0 = disabled)",
-    "--dry-multiplier": "set DRY sampling multiplier (default: 0.0, 0.0 = disabled)",
-    "--dry-base": "set DRY sampling base value (default: 1.75)",
-    "--dry-allowed-length": "set allowed length for DRY sampling (default: 2)",
-    "--dry-penalty-last-n": "set DRY penalty for the last n tokens (default: -1, 0 = disable, -1 =",
-    "--dry-sequence-breaker": "add sequence breaker for DRY sampling, clearing out default breakers",
-    "--dynatemp-range": "dynamic temperature range (default: 0.0, 0.0 = disabled)",
-    "--dynatemp-exp": "dynamic temperature exponent (default: 1.0)",
-    "--mirostat": "use Mirostat sampling.",
-    "--mirostat-lr": "Mirostat learning rate, parameter eta (default: 0.1)",
-    "--mirostat-ent": "Mirostat target entropy, parameter tau (default: 5.0)",
-    "--grammar": "BNF-like grammar to constrain generations (see samples in grammars/",
-    "--grammar-file": "file to read grammar from",
-    "-j": "--json-schema-file FILE          File containing a JSON schema to constrain generations",
-    "--no-perf": "disable internal libllama performance timings (default: false)",
-    "--no-escape": "do not process escape sequences",
-    "--no-mmap": "do not memory-map model (slower load but may reduce pageouts if not",
-    "--no-op-offload": "disable offloading host tensor operations to device (default: false)",
-    "--context-shift": "whether to use context shift on infinite text generation (default:",
-    "-r": "--reverse-prompt PROMPT          halt generation at PROMPT, return control in interactive mode",
-    "--spm-infill": "use Suffix/Prefix/Middle pattern for infill (instead of",
-    "--pooling": "pooling type for embeddings, use model default if unspecified",
-    "--image-min-tokens": "minimum number of tokens each image can take, only used by vision",
-    "--image-max-tokens": "maximum number of tokens each image can take, only used by vision",
-    "-a": "--alias STRING                   set alias for model name (to be used by REST API)",
-    "--host": "ip address to listen, or bind to an UNIX socket if the address ends",
-    "--port": "port to listen (default: 8080)",
-    "--path": "path to serve static files from (default: )",
-    "--api-prefix": "prefix path the server serves from, without the trailing slash",
-    "--embedding": "restrict to only support embedding use case; use only with dedicated",
-    "--rerank": "enable reranking endpoint on server (default: disabled)",
-    "--api-key": "API key to use for authentication (default: none)",
-    "--api-key-file": "path to file containing API keys (default: none)",
-    "--ssl-key-file": "path to file a PEM-encoded SSL private key",
-    "--ssl-cert-file": "path to file a PEM-encoded SSL certificate",
-    "--chat-template-kwargs": "sets additional params for the json template parser",
-    "--threads-http": "number of threads used to process HTTP requests (default: -1)",
-    "--cache-reuse": "min chunk size to attempt reusing from the cache via KV shifting",
-    "--metrics": "enable prometheus compatible metrics endpoint (default: disabled)",
-    "--props": "enable changing global properties via POST /props (default: disabled)",
-    "--slots": "expose slots monitoring endpoint (default: enabled)",
-    "--slot-save-path": "path to save slot kv cache (default: disabled)",
-    "--jinja": "whether to use jinja template engine for chat (default: enabled)",
-    "--reasoning-format": "controls whether thought tags are allowed and/or extracted from the",
-    "--reasoning-budget": "controls the amount of thinking allowed; currently only one of: -1 for",
-    "--chat-template": "set custom jinja chat template (default: template taken from model's",
-    "--lora-init-without-apply": "load LoRA adapters without applying them (apply later via POST",
-    "--draft": "number of tokens to draft for speculative decoding (default: 16)",
-    "--draft-min": "minimum number of draft tokens to use for speculative decoding",
-    "--draft-p-min": "minimum speculative decoding probability (greedy) (default: 0.8)",
-    "--spec-replace": "translate the string in TARGET into DRAFT if the draft model and main",
-    "--tts-use-guide-tokens": "Use guide tokens to improve TTS word recall",
-    "--embd-gemma-default": "use default EmbeddingGemma model (note: can download weights from the",
-    "--fim-qwen-3b-default": "use default Qwen 2.5 Coder 3B (note: can download weights from the",
-    "--fim-qwen-7b-default": "use default Qwen 2.5 Coder 7B (note: can download weights from the",
-    "--fim-qwen-7b-spec": "use Qwen 2.5 Coder 7B + 0.5B draft for speculative decoding (note: can",
-    "--fim-qwen-14b-spec": "use Qwen 2.5 Coder 14B + 0.5B draft for speculative decoding (note:",
-    "--fim-qwen-30b-default": "use default Qwen 3 Coder 30B A3B Instruct (note: can download weights",
-    "--gpt-oss-20b-default": "use gpt-oss-20b (note: can download weights from the internet)",
-    "--gpt-oss-120b-default": "use gpt-oss-120b (note: can download weights from the internet)",
-    "--vision-gemma-4b-default": "use Gemma 3 4B QAT (note: can download weights from the internet)",
-    "--vision-gemma-12b-default": "use Gemma 3 12B QAT (note: can download weights from the internet)"
-  },
-  "server": {
-    "-k": "use single unified KV buffer shared across all sequences (default:",
-    "--warmup": "whether to perform warmup with an empty run (default: enabled)",
-    "--mmproj-offload": "whether to enable GPU offloading for multimodal projector (default:",
-    "--webui": "whether to enable the Web UI (default: enabled)",
-    "--media-path": "directory for loading local media files; files can be accessed via",
-    "--models-dir": "directory containing models for the router server (default: disabled)",
-    "--models-preset": "path to INI file containing model presets for the router server",
-    "--models-max": "for router server, maximum number of models to load simultaneously"
-  },
-  "cli": {
-    "--no-context-shift": "disables context shift on infinite text generation (default: enabled)",
-    "--no-warmup": "skip warming up the model with an empty run",
-    "--mmproj": "path to a multimodal projector file. see tools/mtmd/README.md",
-    "--mmproj-url": "URL to a multimodal projector file. see tools/mtmd/README.md",
-    "--no-mmproj": "explicitly disable multimodal projector, useful when using -hf",
-    "--no-mmproj-offload": "do not offload multimodal projector to GPU",
-    "--no-webui": "Disable the Web UI (default: enabled)",
-    "--no-slots": "disables slots monitoring endpoint",
-    "--no-prefill-assistant": "whether to prefill the assistant's response if the last message is an"
-  }
+  "common": [
+    {
+      "param": "-h",
+      "desc": "--hf-token TOKEN                 Hugging Face access token (default: value from HF_TOKEN environment variable) (env: HF_TOKEN)"
+    },
+    {
+      "param": "--version",
+      "desc": "show version and build info"
+    },
+    {
+      "param": "-c",
+      "desc": "--ctx-size-draft N               size of the prompt context for the draft model (default: 0, 0 = loaded from model) (env: LLAMA_ARG_CTX_SIZE_DRAFT)"
+    },
+    {
+      "param": "--completion-bash",
+      "desc": "print source-able bash completion script for llama.cpp"
+    },
+    {
+      "param": "--verbose-prompt",
+      "desc": "print a verbose prompt before generation (default: false)"
+    },
+    {
+      "param": "-t",
+      "desc": "--threads-batch-draft N          number of threads to use during batch and prompt processing (default: same as --threads-draft)"
+    },
+    {
+      "param": "-C",
+      "desc": "--cpu-range-batch lo-hi          ranges of CPUs for affinity. Complements --cpu-mask-batch"
+    },
+    {
+      "param": "--cpu-strict",
+      "desc": "use strict CPU placement (default: 0)"
+    },
+    {
+      "param": "--prio",
+      "desc": "set process/thread priority : low(-1), normal(0), medium(1), high(2), realtime(3) (default: 0)"
+    },
+    {
+      "param": "--poll",
+      "desc": "use polling level to wait for work (0 - no polling, default: 50)"
+    },
+    {
+      "param": "--cpu-strict-batch",
+      "desc": "use strict CPU placement (default: same as --cpu-strict)"
+    },
+    {
+      "param": "--prio-batch",
+      "desc": "set process/thread priority : 0-normal, 1-medium, 2-high, 3-realtime (default: 0)"
+    },
+    {
+      "param": "--poll-batch",
+      "desc": "use polling to wait for work (default: same as --poll)"
+    },
+    {
+      "param": "-n",
+      "desc": "keep the Mixture of Experts (MoE) weights of the first N layers in the CPU for the draft model (env: LLAMA_ARG_N_CPU_MOE_DRAFT)"
+    },
+    {
+      "param": "-b",
+      "desc": "--batch-size N                   logical maximum batch size (default: 2048) (env: LLAMA_ARG_BATCH)"
+    },
+    {
+      "param": "-u",
+      "desc": "--ubatch-size N                  physical maximum batch size (default: 512) (env: LLAMA_ARG_UBATCH)"
+    },
+    {
+      "param": "--keep",
+      "desc": "number of tokens to keep from the initial prompt (default: 0, -1 = all)"
+    },
+    {
+      "param": "--swa-full",
+      "desc": "use full-size SWA cache (default: false) [(more info)](https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055) (env: LLAMA_ARG_SWA_FULL)"
+    },
+    {
+      "param": "-f",
+      "desc": "--flash-attn [on|off|auto]       set Flash Attention use ('on', 'off', or 'auto', default: 'auto') (env: LLAMA_ARG_FLASH_ATTN)"
+    },
+    {
+      "param": "--perf",
+      "desc": "whether to enable internal libllama performance timings (default: false) (env: LLAMA_ARG_PERF)"
+    },
+    {
+      "param": "-e",
+      "desc": "--escape                         process escapes sequences (\\n, \\r, \\t, \\', \\\", \\\\) (default: true)"
+    },
+    {
+      "param": "--rope-scaling",
+      "desc": "RoPE frequency scaling method, defaults to linear unless specified by the model (env: LLAMA_ARG_ROPE_SCALING_TYPE)"
+    },
+    {
+      "param": "--rope-scale",
+      "desc": "RoPE context scaling factor, expands context by a factor of N (env: LLAMA_ARG_ROPE_SCALE)"
+    },
+    {
+      "param": "--rope-freq-base",
+      "desc": "RoPE base frequency, used by NTK-aware scaling (default: loaded from model) (env: LLAMA_ARG_ROPE_FREQ_BASE)"
+    },
+    {
+      "param": "--rope-freq-scale",
+      "desc": "RoPE frequency scaling factor, expands context by a factor of 1/N (env: LLAMA_ARG_ROPE_FREQ_SCALE)"
+    },
+    {
+      "param": "--yarn-orig-ctx",
+      "desc": "YaRN: original context size of model (default: 0 = model training context size) (env: LLAMA_ARG_YARN_ORIG_CTX)"
+    },
+    {
+      "param": "--yarn-ext-factor",
+      "desc": "YaRN: extrapolation mix factor (default: -1.0, 0.0 = full interpolation) (env: LLAMA_ARG_YARN_EXT_FACTOR)"
+    },
+    {
+      "param": "--yarn-attn-factor",
+      "desc": "YaRN: scale sqrt(t) or attention magnitude (default: -1.0) (env: LLAMA_ARG_YARN_ATTN_FACTOR)"
+    },
+    {
+      "param": "--yarn-beta-slow",
+      "desc": "YaRN: high correction dim or alpha (default: -1.0) (env: LLAMA_ARG_YARN_BETA_SLOW)"
+    },
+    {
+      "param": "--yarn-beta-fast",
+      "desc": "YaRN: low correction dim or beta (default: -1.0) (env: LLAMA_ARG_YARN_BETA_FAST)"
+    },
+    {
+      "param": "-k",
+      "desc": "use single unified KV buffer for the KV cache of all sequences (default: false) [(more info)](https://github.com/ggml-org/llama.cpp/pull/14363) (env: LLAMA_ARG_KV_SPLIT)"
+    },
+    {
+      "param": "--no-host",
+      "desc": "bypass host buffer allowing extra buffers to be used (env: LLAMA_ARG_NO_HOST)"
+    },
+    {
+      "param": "-d",
+      "desc": "use default Qwen 2.5 Coder 1.5B (note: can download weights from the internet)"
+    },
+    {
+      "param": "--mlock",
+      "desc": "force system to keep model in RAM rather than swapping or compressing (env: LLAMA_ARG_MLOCK)"
+    },
+    {
+      "param": "--mmap",
+      "desc": "whether to memory-map model (if disabled, slower load but may reduce pageouts if not using mlock) (default: enabled) (env: LLAMA_ARG_MMAP)"
+    },
+    {
+      "param": "--numa",
+      "desc": "attempt optimizations that help on some NUMA systems - distribute: spread execution evenly over all nodes - isolate: only spawn threads on CPUs on the node that execution started on - numactl: use the CPU map provided by numactl if run without this previously, it is recommended to drop the system page cache before using this see https://github.com/ggml-org/llama.cpp/issues/1437 (env: LLAMA_ARG_NUMA)"
+    },
+    {
+      "param": "--list-devices",
+      "desc": "print list of available devices and exit"
+    },
+    {
+      "param": "-s",
+      "desc": "--slot-prompt-similarity SIMILARITY how much the prompt of a request must match the prompt of a slot in order to use that slot (default: 0.10, 0.0 = disabled)"
+    },
+    {
+      "param": "-m",
+      "desc": "--model-vocoder FNAME            vocoder model for audio generation (default: unused)"
+    },
+    {
+      "param": "--check-tensors",
+      "desc": "check model tensor data for invalid values (default: false)"
+    },
+    {
+      "param": "--override-kv",
+      "desc": "advanced option to override model metadata by key. may be specified multiple times. types: int, float, bool, str. example: --override-kv tokenizer.ggml.add_bos_token=bool:false"
+    },
+    {
+      "param": "--op-offload",
+      "desc": "whether to offload host tensor operations to device (default: true)"
+    },
+    {
+      "param": "--lora",
+      "desc": "path to LoRA adapter (can be repeated to use multiple adapters)"
+    },
+    {
+      "param": "--lora-scaled",
+      "desc": "path to LoRA adapter with user defined scaling (can be repeated to use multiple adapters)"
+    },
+    {
+      "param": "--control-vector",
+      "desc": "add a control vector note: this argument can be repeated to add multiple control vectors"
+    },
+    {
+      "param": "--control-vector-scaled",
+      "desc": "add a control vector with user defined scaling SCALE note: this argument can be repeated to add multiple scaled control vectors"
+    },
+    {
+      "param": "--log-disable",
+      "desc": "Log disable"
+    },
+    {
+      "param": "--log-file",
+      "desc": "Log to file"
+    },
+    {
+      "param": "--log-colors",
+      "desc": "Set colored logging ('on', 'off', or 'auto', default: 'auto') 'auto' enables colors when output is to a terminal (env: LLAMA_LOG_COLORS)"
+    },
+    {
+      "param": "-v",
+      "desc": "--verbose, --log-verbose         Set verbosity level to infinity (i.e. log all messages, useful for debugging)"
+    },
+    {
+      "param": "--offline",
+      "desc": "Offline mode: forces use of cache, prevents network access (env: LLAMA_OFFLINE)"
+    },
+    {
+      "param": "-l",
+      "desc": "--logit-bias TOKEN_ID(+/-)BIAS   modifies the likelihood of token appearing in the completion, i.e. `--logit-bias 15043+1` to increase likelihood of token ' Hello', or `--logit-bias 15043-1` to decrease likelihood of token ' Hello'"
+    },
+    {
+      "param": "--log-prefix",
+      "desc": "Enable prefix in log messages (env: LLAMA_LOG_PREFIX)"
+    },
+    {
+      "param": "--log-timestamps",
+      "desc": "Enable timestamps in log messages (env: LLAMA_LOG_TIMESTAMPS)"
+    },
+    {
+      "param": "--samplers",
+      "desc": "samplers that will be used for generation in the order, separated by ';' (default: penalties;dry;top_n_sigma;top_k;typ_p;top_p;min_p;xtc;temperature)"
+    },
+    {
+      "param": "--ignore-eos",
+      "desc": "ignore end of stream token and continue generating (implies --logit-bias EOS-inf)"
+    },
+    {
+      "param": "--temp",
+      "desc": "temperature (default: 0.8)"
+    },
+    {
+      "param": "--top-k",
+      "desc": "top-k sampling (default: 40, 0 = disabled)"
+    },
+    {
+      "param": "--top-p",
+      "desc": "top-p sampling (default: 0.9, 1.0 = disabled)"
+    },
+    {
+      "param": "--min-p",
+      "desc": "min-p sampling (default: 0.1, 0.0 = disabled)"
+    },
+    {
+      "param": "--top-nsigma",
+      "desc": "top-n-sigma sampling (default: -1.0, -1.0 = disabled)"
+    },
+    {
+      "param": "--xtc-probability",
+      "desc": "xtc probability (default: 0.0, 0.0 = disabled)"
+    },
+    {
+      "param": "--xtc-threshold",
+      "desc": "xtc threshold (default: 0.1, 1.0 = disabled)"
+    },
+    {
+      "param": "--typical",
+      "desc": "locally typical sampling, parameter p (default: 1.0, 1.0 = disabled)"
+    },
+    {
+      "param": "--repeat-last-n",
+      "desc": "last n tokens to consider for penalize (default: 64, 0 = disabled, -1 = ctx_size)"
+    },
+    {
+      "param": "--repeat-penalty",
+      "desc": "penalize repeat sequence of tokens (default: 1.0, 1.0 = disabled)"
+    },
+    {
+      "param": "--presence-penalty",
+      "desc": "repeat alpha presence penalty (default: 0.0, 0.0 = disabled)"
+    },
+    {
+      "param": "--frequency-penalty",
+      "desc": "repeat alpha frequency penalty (default: 0.0, 0.0 = disabled)"
+    },
+    {
+      "param": "--dry-multiplier",
+      "desc": "set DRY sampling multiplier (default: 0.0, 0.0 = disabled)"
+    },
+    {
+      "param": "--dry-base",
+      "desc": "set DRY sampling base value (default: 1.75)"
+    },
+    {
+      "param": "--dry-allowed-length",
+      "desc": "set allowed length for DRY sampling (default: 2)"
+    },
+    {
+      "param": "--dry-penalty-last-n",
+      "desc": "set DRY penalty for the last n tokens (default: -1, 0 = disable, -1 = context size)"
+    },
+    {
+      "param": "--dry-sequence-breaker",
+      "desc": "add sequence breaker for DRY sampling, clearing out default breakers ('\\n', ':', '\"', '*') in the process; use \"none\" to not use any sequence breakers"
+    },
+    {
+      "param": "--dynatemp-range",
+      "desc": "dynamic temperature range (default: 0.0, 0.0 = disabled)"
+    },
+    {
+      "param": "--dynatemp-exp",
+      "desc": "dynamic temperature exponent (default: 1.0)"
+    },
+    {
+      "param": "--mirostat",
+      "desc": "use Mirostat sampling. Top K, Nucleus and Locally Typical samplers are ignored if used. (default: 0, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0)"
+    },
+    {
+      "param": "--mirostat-lr",
+      "desc": "Mirostat learning rate, parameter eta (default: 0.1)"
+    },
+    {
+      "param": "--mirostat-ent",
+      "desc": "Mirostat target entropy, parameter tau (default: 5.0)"
+    },
+    {
+      "param": "--grammar",
+      "desc": "BNF-like grammar to constrain generations (see samples in grammars/ dir) (default: '')"
+    },
+    {
+      "param": "--grammar-file",
+      "desc": "file to read grammar from"
+    },
+    {
+      "param": "-j",
+      "desc": "--json-schema-file FILE          File containing a JSON schema to constrain generations (https://json-schema.org/), e.g. `{}` for any JSON object For schemas w/ external $refs, use --grammar + example/json_schema_to_grammar.py instead"
+    },
+    {
+      "param": "--no-perf",
+      "desc": "disable internal libllama performance timings (default: false) (env: LLAMA_ARG_NO_PERF)"
+    },
+    {
+      "param": "--no-escape",
+      "desc": "do not process escape sequences"
+    },
+    {
+      "param": "--no-mmap",
+      "desc": "do not memory-map model (slower load but may reduce pageouts if not using mlock) (env: LLAMA_ARG_NO_MMAP)"
+    },
+    {
+      "param": "--no-op-offload",
+      "desc": "disable offloading host tensor operations to device (default: false)"
+    },
+    {
+      "param": "--context-shift",
+      "desc": "whether to use context shift on infinite text generation (default: disabled) (env: LLAMA_ARG_CONTEXT_SHIFT)"
+    },
+    {
+      "param": "-r",
+      "desc": "--reverse-prompt PROMPT          halt generation at PROMPT, return control in interactive mode"
+    },
+    {
+      "param": "--spm-infill",
+      "desc": "use Suffix/Prefix/Middle pattern for infill (instead of Prefix/Suffix/Middle) as some models prefer this. (default: disabled)"
+    },
+    {
+      "param": "--pooling",
+      "desc": "pooling type for embeddings, use model default if unspecified (env: LLAMA_ARG_POOLING)"
+    },
+    {
+      "param": "--image-min-tokens",
+      "desc": "minimum number of tokens each image can take, only used by vision models with dynamic resolution (default: read from model) (env: LLAMA_ARG_IMAGE_MIN_TOKENS)"
+    },
+    {
+      "param": "--image-max-tokens",
+      "desc": "maximum number of tokens each image can take, only used by vision models with dynamic resolution (default: read from model) (env: LLAMA_ARG_IMAGE_MAX_TOKENS)"
+    },
+    {
+      "param": "-a",
+      "desc": "--alias STRING                   set alias for model name (to be used by REST API) (env: LLAMA_ARG_ALIAS)"
+    },
+    {
+      "param": "--host",
+      "desc": "ip address to listen, or bind to an UNIX socket if the address ends with .sock (default: 127.0.0.1) (env: LLAMA_ARG_HOST)"
+    },
+    {
+      "param": "--port",
+      "desc": "port to listen (default: 8080) (env: LLAMA_ARG_PORT)"
+    },
+    {
+      "param": "--path",
+      "desc": "path to serve static files from (default: ) (env: LLAMA_ARG_STATIC_PATH)"
+    },
+    {
+      "param": "--api-prefix",
+      "desc": "prefix path the server serves from, without the trailing slash (default: ) (env: LLAMA_ARG_API_PREFIX)"
+    },
+    {
+      "param": "--embedding",
+      "desc": "restrict to only support embedding use case; use only with dedicated embedding models (default: disabled) (env: LLAMA_ARG_EMBEDDINGS)"
+    },
+    {
+      "param": "--rerank",
+      "desc": "enable reranking endpoint on server (default: disabled) (env: LLAMA_ARG_RERANKING)"
+    },
+    {
+      "param": "--api-key",
+      "desc": "API key to use for authentication (default: none) (env: LLAMA_API_KEY)"
+    },
+    {
+      "param": "--api-key-file",
+      "desc": "path to file containing API keys (default: none)"
+    },
+    {
+      "param": "--ssl-key-file",
+      "desc": "path to file a PEM-encoded SSL private key (env: LLAMA_ARG_SSL_KEY_FILE)"
+    },
+    {
+      "param": "--ssl-cert-file",
+      "desc": "path to file a PEM-encoded SSL certificate (env: LLAMA_ARG_SSL_CERT_FILE)"
+    },
+    {
+      "param": "--chat-template-kwargs",
+      "desc": "sets additional params for the json template parser (env: LLAMA_CHAT_TEMPLATE_KWARGS)"
+    },
+    {
+      "param": "--threads-http",
+      "desc": "number of threads used to process HTTP requests (default: -1) (env: LLAMA_ARG_THREADS_HTTP)"
+    },
+    {
+      "param": "--cache-reuse",
+      "desc": "min chunk size to attempt reusing from the cache via KV shifting (default: 0) [(card)](https://ggml.ai/f0.png) (env: LLAMA_ARG_CACHE_REUSE)"
+    },
+    {
+      "param": "--metrics",
+      "desc": "enable prometheus compatible metrics endpoint (default: disabled) (env: LLAMA_ARG_ENDPOINT_METRICS)"
+    },
+    {
+      "param": "--props",
+      "desc": "enable changing global properties via POST /props (default: disabled) (env: LLAMA_ARG_ENDPOINT_PROPS)"
+    },
+    {
+      "param": "--slots",
+      "desc": "expose slots monitoring endpoint (default: enabled) (env: LLAMA_ARG_ENDPOINT_SLOTS)"
+    },
+    {
+      "param": "--slot-save-path",
+      "desc": "path to save slot kv cache (default: disabled)"
+    },
+    {
+      "param": "--jinja",
+      "desc": "whether to use jinja template engine for chat (default: enabled) (env: LLAMA_ARG_JINJA)"
+    },
+    {
+      "param": "--reasoning-format",
+      "desc": "controls whether thought tags are allowed and/or extracted from the response, and in which format they're returned; one of: - none: leaves thoughts unparsed in `message.content` - deepseek: puts thoughts in `message.reasoning_content` - deepseek-legacy: keeps `<think>` tags in `message.content` while also populating `message.reasoning_content` (default: auto) (env: LLAMA_ARG_THINK)"
+    },
+    {
+      "param": "--reasoning-budget",
+      "desc": "controls the amount of thinking allowed; currently only one of: -1 for unrestricted thinking budget, or 0 to disable thinking (default: -1) (env: LLAMA_ARG_THINK_BUDGET)"
+    },
+    {
+      "param": "--chat-template",
+      "desc": "set custom jinja chat template (default: template taken from model's metadata) if suffix/prefix are specified, template will be disabled only commonly used templates are accepted (unless --jinja is set before this flag): list of built-in templates: bailing, bailing-think, bailing2, chatglm3, chatglm4, chatml, command-r, deepseek, deepseek2, deepseek3, exaone3, exaone4, falcon3, gemma, gigachat, glmedge, gpt-oss, granite, grok-2, hunyuan-dense, hunyuan-moe, kimi-k2, llama2, llama2-sys, llama2-sys-bos, llama2-sys-strip, llama3, llama4, megrez, minicpm, mistral-v1, mistral-v3, mistral-v3-tekken, mistral-v7, mistral-v7-tekken, monarch, openchat, orion, pangu-embedded, phi3, phi4, rwkv-world, seed_oss, smolvlm, vicuna, vicuna-orca, yandex, zephyr (env: LLAMA_ARG_CHAT_TEMPLATE)"
+    },
+    {
+      "param": "--lora-init-without-apply",
+      "desc": "load LoRA adapters without applying them (apply later via POST /lora-adapters) (default: disabled)"
+    },
+    {
+      "param": "--draft",
+      "desc": "number of tokens to draft for speculative decoding (default: 16) (env: LLAMA_ARG_DRAFT_MAX)"
+    },
+    {
+      "param": "--draft-min",
+      "desc": "minimum number of draft tokens to use for speculative decoding (default: 0) (env: LLAMA_ARG_DRAFT_MIN)"
+    },
+    {
+      "param": "--draft-p-min",
+      "desc": "minimum speculative decoding probability (greedy) (default: 0.8) (env: LLAMA_ARG_DRAFT_P_MIN)"
+    },
+    {
+      "param": "--spec-replace",
+      "desc": "translate the string in TARGET into DRAFT if the draft model and main model are not compatible"
+    },
+    {
+      "param": "--tts-use-guide-tokens",
+      "desc": "Use guide tokens to improve TTS word recall"
+    },
+    {
+      "param": "--embd-gemma-default",
+      "desc": "use default EmbeddingGemma model (note: can download weights from the internet)"
+    },
+    {
+      "param": "--fim-qwen-3b-default",
+      "desc": "use default Qwen 2.5 Coder 3B (note: can download weights from the internet)"
+    },
+    {
+      "param": "--fim-qwen-7b-default",
+      "desc": "use default Qwen 2.5 Coder 7B (note: can download weights from the internet)"
+    },
+    {
+      "param": "--fim-qwen-7b-spec",
+      "desc": "use Qwen 2.5 Coder 7B + 0.5B draft for speculative decoding (note: can download weights from the internet)"
+    },
+    {
+      "param": "--fim-qwen-14b-spec",
+      "desc": "use Qwen 2.5 Coder 14B + 0.5B draft for speculative decoding (note: can download weights from the internet)"
+    },
+    {
+      "param": "--fim-qwen-30b-default",
+      "desc": "use default Qwen 3 Coder 30B A3B Instruct (note: can download weights from the internet)"
+    },
+    {
+      "param": "--gpt-oss-20b-default",
+      "desc": "use gpt-oss-20b (note: can download weights from the internet)"
+    },
+    {
+      "param": "--gpt-oss-120b-default",
+      "desc": "use gpt-oss-120b (note: can download weights from the internet)"
+    },
+    {
+      "param": "--vision-gemma-4b-default",
+      "desc": "use Gemma 3 4B QAT (note: can download weights from the internet)"
+    },
+    {
+      "param": "--vision-gemma-12b-default",
+      "desc": "use Gemma 3 12B QAT (note: can download weights from the internet)"
+    }
+  ],
+  "server": [
+    {
+      "param": "-k",
+      "desc": "use single unified KV buffer shared across all sequences (default: enabled if number of slots is auto) (env: LLAMA_ARG_KV_UNIFIED)"
+    },
+    {
+      "param": "--warmup",
+      "desc": "whether to perform warmup with an empty run (default: enabled)"
+    },
+    {
+      "param": "--mmproj-offload",
+      "desc": "whether to enable GPU offloading for multimodal projector (default: enabled) (env: LLAMA_ARG_MMPROJ_OFFLOAD)"
+    },
+    {
+      "param": "--webui",
+      "desc": "whether to enable the Web UI (default: enabled) (env: LLAMA_ARG_WEBUI)"
+    },
+    {
+      "param": "--media-path",
+      "desc": "directory for loading local media files; files can be accessed via file:// URLs using relative paths (default: disabled)"
+    },
+    {
+      "param": "--models-dir",
+      "desc": "directory containing models for the router server (default: disabled) (env: LLAMA_ARG_MODELS_DIR)"
+    },
+    {
+      "param": "--models-preset",
+      "desc": "path to INI file containing model presets for the router server (default: disabled) (env: LLAMA_ARG_MODELS_PRESET)"
+    },
+    {
+      "param": "--models-max",
+      "desc": "for router server, maximum number of models to load simultaneously (default: 4, 0 = unlimited) (env: LLAMA_ARG_MODELS_MAX)"
+    }
+  ],
+  "cli": [
+    {
+      "param": "--no-context-shift",
+      "desc": "disables context shift on infinite text generation (default: enabled) (env: LLAMA_ARG_NO_CONTEXT_SHIFT)"
+    },
+    {
+      "param": "--no-warmup",
+      "desc": "skip warming up the model with an empty run"
+    },
+    {
+      "param": "--mmproj",
+      "desc": "path to a multimodal projector file. see tools/mtmd/README.md note: if -hf is used, this argument can be omitted (env: LLAMA_ARG_MMPROJ)"
+    },
+    {
+      "param": "--mmproj-url",
+      "desc": "URL to a multimodal projector file. see tools/mtmd/README.md (env: LLAMA_ARG_MMPROJ_URL)"
+    },
+    {
+      "param": "--no-mmproj",
+      "desc": "explicitly disable multimodal projector, useful when using -hf (env: LLAMA_ARG_NO_MMPROJ)"
+    },
+    {
+      "param": "--no-mmproj-offload",
+      "desc": "do not offload multimodal projector to GPU (env: LLAMA_ARG_NO_MMPROJ_OFFLOAD)"
+    },
+    {
+      "param": "--no-webui",
+      "desc": "Disable the Web UI (default: enabled) (env: LLAMA_ARG_NO_WEBUI)"
+    },
+    {
+      "param": "--no-slots",
+      "desc": "disables slots monitoring endpoint (env: LLAMA_ARG_NO_ENDPOINT_SLOTS)"
+    },
+    {
+      "param": "--no-prefill-assistant",
+      "desc": "whether to prefill the assistant's response if the last message is an assistant message (default: prefill enabled) when this flag is set, if the last message is an assistant message then it will be treated as a full message and not prefilled (env: LLAMA_ARG_NO_PREFILL_ASSISTANT)"
+    }
+  ]
 }
