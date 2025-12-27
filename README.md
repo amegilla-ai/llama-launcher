@@ -10,7 +10,7 @@ A clean, web-based interface for managing and launching GGUF language models wit
 - 🚀 **Static Launcher**: Generate standalone HTML interface for launching models
 - 📊 **Overview Dashboard**: See all models and their configurations at a glance
 - 🗂️ **Organized by Folder**: Models grouped by directory for easy navigation
-- 🔧 **Parameter Discovery**: Extract available parameters directly from llama.cpp binaries using LLM
+- 🔧 **Parameter Discovery**: Extract available parameters directly from llama.cpp binaries with automatic parsing
 - 🎨 **Modern UI**: Clean interface using Inter font with consistent styling
 - ⚡ **Settings Management**: Unified settings page for configuration, folders, and defaults
 
@@ -33,7 +33,7 @@ A clean, web-based interface for managing and launching GGUF language models wit
 1. **Configure Settings**: Click "Settings" to access the unified configuration page
 2. **Set Binary Paths**: Configure paths to your `llama-server` and `llama-cli` executables  
 3. **Configure Folders**: Set directories containing your GGUF files
-4. **Generate Parameter References**: Use LLM extraction to discover available parameters from binaries
+4. **Generate Parameter References**: Use direct parsing to discover available parameters from binaries
 5. **Set Default Parameters**: Configure default settings for new models with GPU/CPU values
 6. **Scan Models**: Click "Scan for Models" to discover all GGUF files in configured directories
 7. **Edit Parameters**: Click "Edit" on any model to customize parameters with GPU/CPU values
@@ -85,7 +85,7 @@ The system generates 4 command combinations for each model:
 - **Dashboard**: View all models with their Common/Server/CLI parameters in organized columns
 - **Settings**: Unified configuration page for binary paths, scan folders, and default parameters
 - **Edit Models**: Click any model name to customize launch parameters with GPU/CPU values
-- **Parameter Discovery**: Generate parameter references from llama.cpp binaries using LLM
+- **Parameter Discovery**: Generate parameter references from llama.cpp binaries with direct parsing
 - **Add from Llama.cpp**: Use modal interface to add official parameters with descriptions
 
 ### Static Launcher (`data/static_site/index.html`)
@@ -132,16 +132,17 @@ Set paths to your llama.cpp executables:
 ### Parameter Discovery
 Extract available parameters directly from your llama.cpp binaries:
 1. Configure binary paths in Settings
-2. Click "Generate Parameter References" 
+2. Click "Generate Parameters" 
 3. System runs `--help` on both binaries
-4. Automatically categorizes parameters as Common/Server/CLI
-5. Use "Add from Llama.cpp" buttons to browse and add parameters
+4. Automatically parses and categorizes parameters as Common/Server/CLI
+5. Preserves parameter order and full descriptions from help text
+6. Use "Add from Llama.cpp" buttons to browse and add parameters
 
 ### Migration Support
-Seamlessly handles data from older versions:
-- Automatically converts old GPU/CPU parameter format
-- Preserves existing model configurations
-- Graceful fallbacks for missing data
+Clean architecture without legacy code:
+- Fresh database schema for new installations
+- Simplified parameter structure
+- No backward compatibility overhead
 
 ### Database Storage
 Efficient storage of model configurations:
@@ -157,7 +158,7 @@ Efficient storage of model configurations:
 - **Cleanup**: Delete models from database if files are moved/removed
 - **Defaults**: Set good defaults before scanning to save time on individual models
 - **Comments**: Use parameter comments to document your configuration choices
-- **Discovery**: Generate parameter references to explore all available llama.cpp options
+- **Discovery**: Generate parameter references to explore all available llama.cpp options with automatic parsing
 
 ## Requirements
 
