@@ -7,6 +7,11 @@
 <body>
 <div class="container">
   <h1>Model Launcher</h1>
+  <p style="color: var(--muted); margin-bottom: 2rem; line-height: 1.6;">
+    Click the clipboard icons to copy launch commands to your clipboard. Each model shows 4 command variations: 
+    <strong>GPU Server</strong>, <strong>CPU Server</strong>, <strong>GPU CLI</strong>, and <strong>CPU CLI</strong>. 
+    Choose the appropriate command based on your hardware and usage needs.
+  </p>
 
   {% if not model_groups %}
     <p class="empty">No models found.</p>

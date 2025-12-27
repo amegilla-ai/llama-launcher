@@ -96,11 +96,14 @@ h1{
     align-items:center;
     justify-content:center;
     padding:0;
+    flex-shrink:0;              /* prevent shrinking */
+    overflow:visible;           /* ensure SVG isn't clipped */
 }
 .copy-btn svg{
     width:1.4rem;               /* bigger icon */
     height:1.4rem;
     fill:var(--muted);
+    overflow:visible;           /* prevent clipping */
 }
 .copy-btn:hover svg{
     fill:var(--primary);
