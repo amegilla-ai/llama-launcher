@@ -126,6 +126,7 @@
     
     <div class="nav-links">
         <a href="#launch-paths">Llama.cpp Launch Paths</a>
+        <a href="#llm-extraction">LLM Parameter Extraction</a>
         <a href="#scan-folders">Folders to Scan</a>
         <a href="#default-params">Default Parameters</a>
     </div>
@@ -158,6 +159,31 @@
                 <label for="cli_cpu_bin">llama.cpp CLI CPU binary</label>
                 <input type="text" id="cli_cpu_bin" name="cli_cpu_bin"
                        value="{{ folders_cfg.llama_cli_cpu_bin|e }}">
+            </div>
+        </div>
+
+        <!-- LLM Parameter Extraction Section -->
+        <div class="section" id="llm-extraction">
+            <h3>LLM Parameter Extraction</h3>
+            <p style="margin-bottom: 1.5rem; color: var(--muted);">Use a local LLM to automatically extract and parse parameters from llama.cpp help output.</p>
+            
+            <div class="field">
+                <label for="llm_endpoint">LLM Endpoint</label>
+                <input type="text" id="llm_endpoint" name="llm_endpoint" 
+                       value="http://localhost:8080" 
+                       placeholder="http://localhost:8080">
+                <small style="color: var(--muted); display: block; margin-top: 0.3rem;">
+                    URL of your local LLM server (OpenAI-compatible API)
+                </small>
+            </div>
+            
+            <div style="margin-top: 1rem;">
+                <button type="button" class="btn-add" onclick="generateParamsLLM()">
+                    Generate Parameters via LLM
+                </button>
+                <small style="color: var(--muted); display: block; margin-top: 0.5rem;">
+                    This will run --help on your binaries and send the output to the LLM for parsing
+                </small>
             </div>
         </div>
 
@@ -396,6 +422,43 @@ window.onclick = function(event) {
     if (event.target === modal) {
         closeParamModal();
     }
+}
+
+/* LLM Parameter Generation */
+function generateParamsLLM() {
+    const endpoint = document.getElementById('llm_endpoint').value;
+    const button = event.target;
+    const originalText = button.textContent;
+    
+    // Disable button and show loading
+    button.disabled = true;
+    button.textContent = 'Generating...';
+    button.style.opacity = '0.6';
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('llm_endpoint', endpoint);
+    
+    // Submit to backend
+    fetch('/generate-params-llm', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            // Reload page to show results
+            window.location.reload();
+        } else {
+            throw new Error('Failed to generate parameters');
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error.message);
+        // Reset button
+        button.disabled = false;
+        button.textContent = originalText;
+        button.style.opacity = '1';
+    });
 }
 
 /* Initialise all sections on page load */

@@ -7,14 +7,33 @@ import pickle
 import sqlite3
 import subprocess
 import re
+import requests
 from collections import defaultdict
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from .config import (
     DB_PATH, DEFAULTS_PATH, SCAN_CFG_PATH, DEFAULT_SCAN_CFG,
-    STATIC_TEMPLATES, STATIC_OUTPUT
+    STATIC_TEMPLATES, STATIC_OUTPUT, DEFAULT_LLM_ENDPOINT, PARAM_REFERENCES_PATH
 )
+
+
+# LLM Client for parameter extraction
+def query_local_llm(prompt, endpoint=DEFAULT_LLM_ENDPOINT, timeout=30):
+    """Send prompt to local LLM and get response."""
+    try:
+        payload = {
+            "prompt": prompt,
+            "temperature": 0.1,
+            "max_tokens": 4000,
+            "stop": ["</json>"]
+        }
+        response = requests.post(f"{endpoint}/v1/completions", 
+                               json=payload, timeout=timeout)
+        response.raise_for_status()
+        return response.json().get("choices", [{}])[0].get("text", "")
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 
 # Database operations
@@ -364,3 +383,73 @@ def load_param_references():
         except Exception:
             pass
     return {"common": {}, "server": {}, "cli": {}}
+
+
+def get_help_text(binary_path):
+    """Execute --help on binary and return output."""
+    try:
+        result = subprocess.run([binary_path, '--help'], 
+                              capture_output=True, text=True, timeout=10)
+        return result.stdout if result.returncode == 0 else None
+    except Exception as e:
+        print(f"Error getting help from {binary_path}: {e}")
+        return None
+
+
+def extract_parameters_via_llm(server_path, cli_path, llm_endpoint=DEFAULT_LLM_ENDPOINT):
+    """Extract parameters using local LLM to parse help text."""
+    # Get help text from both binaries
+    server_help = get_help_text(server_path)
+    cli_help = get_help_text(cli_path)
+    
+    if not server_help or not cli_help:
+        return {"error": "Could not get help text from binaries"}
+    
+    # Create prompt for LLM
+    prompt = f"""Parse these llama.cpp help outputs and return ONLY valid JSON:
+
+SERVER HELP:
+{server_help[:2000]}
+
+CLI HELP:  
+{cli_help[:2000]}
+
+Return JSON with this exact structure:
+{{
+  "common": {{"--threads": "Number of threads", "-c": "Context size"}},
+  "server": {{"--port": "Server port", "--host": "Server host"}},
+  "cli": {{"--interactive": "Interactive mode", "--prompt": "Initial prompt"}}
+}}
+
+Only include parameters that appear in the help text. Focus on the most important ones."""
+    
+    # Query LLM
+    response = query_local_llm(prompt, llm_endpoint)
+    
+    # Try to parse JSON from response
+    try:
+        # Look for JSON in the response
+        start = response.find('{')
+        end = response.rfind('}') + 1
+        if start >= 0 and end > start:
+            json_str = response[start:end]
+            return json.loads(json_str)
+        else:
+            return {"error": "No valid JSON found in LLM response"}
+    except json.JSONDecodeError as e:
+        return {"error": f"JSON parse error: {e}"}
+
+
+def save_param_references_llm(server_path, cli_path, llm_endpoint=DEFAULT_LLM_ENDPOINT):
+    """Generate and save parameter references using LLM."""
+    result = extract_parameters_via_llm(server_path, cli_path, llm_endpoint)
+    
+    if "error" in result:
+        return False, result["error"]
+    
+    try:
+        with open(PARAM_REFERENCES_PATH, "w") as f:
+            json.dump(result, f, indent=2)
+        return True, "Parameters extracted and saved successfully"
+    except Exception as e:
+        return False, f"Error saving parameters: {e}"

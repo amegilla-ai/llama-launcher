@@ -9,7 +9,8 @@ from shared.config import ADMIN_TEMPLATES, STATIC_OUTPUT, DB_PATH
 from shared.utils import (
     init_db, scan_models, get_all_models, load_defaults, save_defaults,
     load_scan_cfg, save_scan_cfg, group_models_by_directory, render_static_page,
-    get_model_config, update_model_config, load_param_references
+    get_model_config, update_model_config, load_param_references,
+    save_param_references_llm
 )
 
 import sqlite3
@@ -249,6 +250,34 @@ def serve_static_assets(filename):
     from shared.config import PROJECT_ROOT
     static_dir = PROJECT_ROOT / "static_site"
     return send_from_directory(str(static_dir), filename)
+
+
+@app.route("/generate-params-llm", methods=["POST"])
+def generate_params_llm():
+    """Generate parameter references using LLM."""
+    cfg = load_scan_cfg()
+    
+    # Get LLM endpoint from form or use default
+    llm_endpoint = request.form.get("llm_endpoint", "").strip()
+    if not llm_endpoint:
+        llm_endpoint = "http://localhost:8080"
+    
+    # Use server GPU binary as primary
+    server_path = cfg.get("llama_server_gpu_bin", "")
+    cli_path = cfg.get("llama_cli_gpu_bin", "")
+    
+    if not server_path or not cli_path:
+        flash("❗ Please configure binary paths in Folders to Scan first.")
+        return redirect(url_for("settings"))
+    
+    success, message = save_param_references_llm(server_path, cli_path, llm_endpoint)
+    
+    if success:
+        flash(f"✅ {message}")
+    else:
+        flash(f"❗ {message}")
+    
+    return redirect(url_for("settings"))
 
 
 if __name__ == "__main__":

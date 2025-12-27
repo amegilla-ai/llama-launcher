@@ -52,7 +52,13 @@ STATIC_TEMPLATES = PROJECT_ROOT / "static_site" / "templates"
 STATIC_OUTPUT    = DATA_ROOT / "static_site"   # <-- generated files live here
 
 # ----------------------------------------------------------------------
-# 4️⃣  (Optional) expose the template / static folders for the admin UI
+# 5️⃣  LLM Configuration for parameter extraction
+# ----------------------------------------------------------------------
+DEFAULT_LLM_ENDPOINT = "http://localhost:8080"
+PARAM_REFERENCES_PATH = DATA_ROOT / "param_references.json"
+
+# ----------------------------------------------------------------------
+# 6️⃣  (Optional) expose the template / static folders for the admin UI
 # ----------------------------------------------------------------------
 ADMIN_TEMPLATES = PROJECT_ROOT / "admin_app" / "templates"
 ADMIN_STATIC    = PROJECT_ROOT / "admin_app" / "static"
