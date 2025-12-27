@@ -427,17 +427,34 @@ def parse_help_text_directly(server_help, cli_help):
     server_sections = extract_params_by_section(server_help)
     cli_sections = extract_params_by_section(cli_help)
     
-    # Common parameters are those in the "common" section of both files
+    # Common parameters are from common/sampling sections of both files
     common_params = {}
-    for param in server_sections["common"]:
-        if param in cli_sections["common"]:
-            common_params[param] = server_sections["common"][param]
+    common_params.update(server_sections["common"])
+    common_params.update(cli_sections["common"])
     
-    # Server-specific are from server's specific section
-    server_only = server_sections["specific"]
+    # For specific sections, separate truly unique ones from shared ones
+    server_specific = server_sections["specific"]
+    cli_specific = cli_sections["specific"]
     
-    # CLI-specific are from CLI's specific section  
-    cli_only = cli_sections["specific"]
+    # Move shared "specific" parameters to common
+    shared_specific = {}
+    server_only = {}
+    cli_only = {}
+    
+    # Find parameters that appear in both specific sections
+    for param, desc in server_specific.items():
+        if param in cli_specific:
+            shared_specific[param] = desc
+        else:
+            server_only[param] = desc
+    
+    # Find CLI-only parameters
+    for param, desc in cli_specific.items():
+        if param not in server_specific:
+            cli_only[param] = desc
+    
+    # Add shared specific parameters to common
+    common_params.update(shared_specific)
     
     return {
         "common": common_params,

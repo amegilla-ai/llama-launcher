@@ -374,10 +374,7 @@ function showParamModal(mode) {
     list.innerHTML = '';
     
     const params = paramRefs[mode] || {};
-    const keys = [];
-    for (const key in params) {
-        keys.push(key);
-    }
+    const keys = Object.keys(params);  // This preserves JSON order in modern browsers
     
     if (keys.length === 0) {
         list.innerHTML = '<p>No parameters available. Create param_references.json file first.</p>';
