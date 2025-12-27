@@ -313,7 +313,9 @@ function addNewParam(mode){
 }
 
 /* Initialise all sections on page load */
-['common', 'server', 'cli'].forEach(m => renderMode(m));
+document.addEventListener('DOMContentLoaded', function() {
+    ['common', 'server', 'cli'].forEach(m => renderMode(m));
+});
 
 /* Parameter modal functionality */
 const paramRefs = {{ param_refs|tojson|safe }};
