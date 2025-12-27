@@ -321,7 +321,11 @@ function showParamModal(mode) {
     list.innerHTML = '';
     
     const params = paramRefs[mode] || {};
-    const keys = Object.keys(params);
+    console.log('paramRefs order:',paramRefs)
+    const keys = [];
+    for (const key in params) {
+        keys.push(key);
+    }
     
     if (keys.length === 0) {
         list.innerHTML = '<p>No parameters available. Generate parameter references first.</p>';

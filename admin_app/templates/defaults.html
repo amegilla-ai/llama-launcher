@@ -175,11 +175,6 @@
         </div>
     </form>
 
-    <!-- Generate Parameter References Form (outside main form) -->
-    <form method="POST" action="/generate-param-refs" style="margin-top: 1rem;">
-        <button type="submit" class="btn-generate">Generate Parameter References</button>
-    </form>
-
     <!-- Parameter Selection Modal -->
     <div id="paramModal" class="modal">
         <div class="modal-content">
@@ -298,7 +293,10 @@ function showParamModal(mode) {
     list.innerHTML = '';
     
     const params = paramRefs[mode] || {};
-    const keys = Object.keys(params);
+    console.log('paramRefs order:',paramRefs)
+    const keys = Object.keys(params); // preserves insertion order
+
+    Object.keys(params);
     
     if (keys.length === 0) {
         list.innerHTML = '<p>No parameters available. Generate parameter references first.</p>';
