@@ -412,7 +412,8 @@ def parse_help_text_directly(server_help, cli_help):
                     param_part = parts[0].strip()
                     desc_part = parts[1].strip()
                     
-                    # Extract all parameter variants (e.g., "-t, --threads")
+                    # Extract all parameter variants from the BEGINNING of the line only
+                    # Format is like: "-t, --threads N" or "--port N"
                     param_matches = re.findall(r'(-[a-zA-Z]|--[a-zA-Z][a-zA-Z0-9-]*)', param_part)
                     
                     # Use shortest parameter name as key
@@ -457,9 +458,9 @@ def parse_help_text_directly(server_help, cli_help):
     common_params.update(shared_specific)
     
     return {
-        "common": common_params,
-        "server": server_only,
-        "cli": cli_only
+        "common": [{"param": k, "desc": v} for k, v in common_params.items()],
+        "server": [{"param": k, "desc": v} for k, v in server_only.items()],
+        "cli": [{"param": k, "desc": v} for k, v in cli_only.items()]
     }
 
 

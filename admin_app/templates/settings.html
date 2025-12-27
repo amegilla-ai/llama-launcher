@@ -373,18 +373,17 @@ function showParamModal(mode) {
     title.textContent = `Add ${mode.charAt(0).toUpperCase() + mode.slice(1)} Parameter`;
     list.innerHTML = '';
     
-    const params = paramRefs[mode] || {};
-    const keys = Object.keys(params);  // This preserves JSON order in modern browsers
+    const params = paramRefs[mode] || [];
     
-    if (keys.length === 0) {
+    if (params.length === 0) {
         list.innerHTML = '<p>No parameters available. Create param_references.json file first.</p>';
     } else {
         let html = '';
-        keys.forEach(param => {
+        params.forEach(item => {
             html += `
-                <div class="param-item" onclick="selectParam('${param}', '${params[param]}')">
-                    <div class="param-name">${param}</div>
-                    <div class="param-desc">${params[param]}</div>
+                <div class="param-item" onclick="selectParam('${item.param}', '${item.desc}')">
+                    <div class="param-name">${item.param}</div>
+                    <div class="param-desc">${item.desc}</div>
                 </div>
             `;
         });
