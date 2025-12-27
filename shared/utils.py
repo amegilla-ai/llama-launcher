@@ -7,7 +7,8 @@ import pickle
 import sqlite3
 import subprocess
 import re
-import requests
+import urllib.request
+import urllib.parse
 from collections import defaultdict
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -28,10 +29,17 @@ def query_local_llm(prompt, endpoint=DEFAULT_LLM_ENDPOINT, timeout=30):
             "max_tokens": 4000,
             "stop": ["</json>"]
         }
-        response = requests.post(f"{endpoint}/v1/completions", 
-                               json=payload, timeout=timeout)
-        response.raise_for_status()
-        return response.json().get("choices", [{}])[0].get("text", "")
+        
+        data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(
+            f"{endpoint}/v1/completions",
+            data=data,
+            headers={'Content-Type': 'application/json'}
+        )
+        
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            result = json.loads(response.read().decode('utf-8'))
+            return result.get("choices", [{}])[0].get("text", "")
     except Exception as e:
         return f"Error: {str(e)}"
 
