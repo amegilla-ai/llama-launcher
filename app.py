@@ -22,10 +22,14 @@ app.secret_key = "dev-secret"  # Change for production
 def rebuild_static():
     """Regenerate static site from current database."""
     try:
-        groups = group_models_by_directory(get_all_models())
+        models = get_all_models()
+        groups = group_models_by_directory(models)
+        print(f"DEBUG: rebuild_static - {len(models)} models, {len(groups)} groups")
         render_static_page(groups)
     except Exception as e:
         print(f"❗ Failed to rebuild static page: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def parse_form_pairs(form_data):
