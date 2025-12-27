@@ -208,14 +208,22 @@ function renderMode(mode){
 
     const cfg = modelConfig[mode] || {};
     const comments = modelComments[mode] || {};
-    const keys = Object.keys(cfg);
+    
+    // Get parameter order from param_refs if available
+    const refParams = paramRefs[mode] || {};
+    const refKeys = Object.keys(refParams);
+    const cfgKeys = Object.keys(cfg);
+    
+    // Use param_refs order first, then any additional parameters
+    const orderedKeys = [...refKeys.filter(k => cfgKeys.includes(k)), 
+                        ...cfgKeys.filter(k => !refKeys.includes(k))];
 
-    if (keys.length===0){
+    if (orderedKeys.length === 0){
         tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No parameters</td></tr>';
         return;
     }
 
-    keys.forEach(k => {
+    orderedKeys.forEach(k => {
         const paramData = cfg[k];
         const gpuVal = paramData.gpu || '';
         const cpuVal = paramData.cpu || '';

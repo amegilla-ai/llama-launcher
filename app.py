@@ -10,7 +10,7 @@ from shared.utils import (
     init_db, scan_models, get_all_models, load_defaults, save_defaults,
     load_scan_cfg, save_scan_cfg, group_models_by_directory, render_static_page,
     get_model_config, update_model_config, load_param_references,
-    save_param_references_llm
+    save_param_references_directly
 )
 
 import sqlite3
@@ -166,8 +166,7 @@ def save_settings():
         "llama_server_gpu_bin": request.form.get("server_gpu_bin", "").strip(),
         "llama_server_cpu_bin": request.form.get("server_cpu_bin", "").strip(),
         "llama_cli_gpu_bin": request.form.get("cli_gpu_bin", "").strip(),
-        "llama_cli_cpu_bin": request.form.get("cli_cpu_bin", "").strip(),
-        "llm_endpoint": request.form.get("llm_endpoint", "").strip()
+        "llama_cli_cpu_bin": request.form.get("cli_cpu_bin", "").strip()
     }
     save_scan_cfg(folders_cfg)
     
@@ -253,16 +252,11 @@ def serve_static_assets(filename):
     return send_from_directory(str(static_dir), filename)
 
 
-@app.route("/generate-params-llm", methods=["POST"])
-def generate_params_llm():
-    """Generate parameter references using LLM."""
+@app.route("/generate-params", methods=["POST"])
+def generate_params():
+    """Generate parameter references using direct parsing."""
     try:
         cfg = load_scan_cfg()
-        
-        # Get LLM endpoint from form or use saved value
-        llm_endpoint = request.form.get("llm_endpoint", "").strip()
-        if not llm_endpoint:
-            llm_endpoint = cfg.get("llm_endpoint", "http://localhost:8080")
         
         # Use server GPU binary as primary
         server_path = cfg.get("llama_server_gpu_bin", "")
@@ -282,7 +276,7 @@ def generate_params_llm():
             flash(f"❗ CLI binary not found: {cli_path}")
             return redirect(url_for("settings"))
         
-        success, message = save_param_references_llm(server_path, cli_path, llm_endpoint)
+        success, message = save_param_references_directly(server_path, cli_path)
         
         if success:
             flash(f"✅ {message}")

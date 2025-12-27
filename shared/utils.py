@@ -7,41 +7,14 @@ import pickle
 import sqlite3
 import subprocess
 import re
-import urllib.request
-import urllib.parse
 from collections import defaultdict
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from .config import (
     DB_PATH, DEFAULTS_PATH, SCAN_CFG_PATH, DEFAULT_SCAN_CFG,
-    STATIC_TEMPLATES, STATIC_OUTPUT, DEFAULT_LLM_ENDPOINT, PARAM_REFERENCES_PATH
+    STATIC_TEMPLATES, STATIC_OUTPUT, PARAM_REFERENCES_PATH
 )
-
-
-# LLM Client for parameter extraction
-def query_local_llm(prompt, endpoint=DEFAULT_LLM_ENDPOINT, timeout=30):
-    """Send prompt to local LLM and get response."""
-    try:
-        payload = {
-            "prompt": prompt,
-            "temperature": 0.1,
-            "max_tokens": 4000,
-            "stop": ["</json>"]
-        }
-        
-        data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(
-            f"{endpoint}/v1/completions",
-            data=data,
-            headers={'Content-Type': 'application/json'}
-        )
-        
-        with urllib.request.urlopen(req, timeout=timeout) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            return result.get("choices", [{}])[0].get("text", "")
-    except Exception as e:
-        return f"Error: {str(e)}"
 
 
 # Database operations
@@ -404,8 +377,66 @@ def get_help_text(binary_path):
         return None
 
 
-def extract_parameters_via_llm(server_path, cli_path, llm_endpoint=DEFAULT_LLM_ENDPOINT):
-    """Extract parameters using local LLM to parse help text."""
+def parse_help_text_directly(server_help, cli_help):
+    """Parse help text directly without LLM."""
+    import re
+    
+    def extract_params(text):
+        """Extract parameters from help text."""
+        params = {}
+        lines = text.split('\n')
+        
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if not line or line.startswith('----- ') or line.startswith('('):
+                continue
+                
+            # Look for parameter lines (start with - or contain --)
+            if re.match(r'^-[a-zA-Z]|^--[a-zA-Z]', line):
+                # Extract parameter names and description
+                parts = re.split(r'\s{2,}', line, 1)  # Split on 2+ spaces
+                if len(parts) >= 2:
+                    param_part = parts[0].strip()
+                    desc_part = parts[1].strip()
+                    
+                    # Extract all parameter variants (e.g., "-t, --threads")
+                    param_matches = re.findall(r'(-[a-zA-Z]|--[a-zA-Z][a-zA-Z0-9-]*)', param_part)
+                    
+                    # Use shortest parameter name as key
+                    if param_matches:
+                        main_param = min(param_matches, key=len)
+                        params[main_param] = desc_part
+        
+        return params
+    
+    # Extract parameters from both
+    server_params = extract_params(server_help)
+    cli_params = extract_params(cli_help)
+    
+    # Find common parameters (appear in both)
+    common_params = {}
+    server_only = {}
+    cli_only = {}
+    
+    for param, desc in server_params.items():
+        if param in cli_params:
+            common_params[param] = desc
+        else:
+            server_only[param] = desc
+    
+    for param, desc in cli_params.items():
+        if param not in server_params:
+            cli_only[param] = desc
+    
+    return {
+        "common": common_params,
+        "server": server_only,
+        "cli": cli_only
+    }
+
+
+def extract_parameters_directly(server_path, cli_path):
+    """Extract parameters using direct parsing of help text."""
     # Get help text from both binaries
     server_help = get_help_text(server_path)
     cli_help = get_help_text(cli_path)
@@ -413,74 +444,17 @@ def extract_parameters_via_llm(server_path, cli_path, llm_endpoint=DEFAULT_LLM_E
     if not server_help or not cli_help:
         return {"error": "Could not get help text from binaries"}
     
-    # Create prompt for LLM
-    prompt = f"""You are a parameter extraction tool. Parse the llama.cpp help output and return ONLY valid JSON.
-
-SERVER HELP OUTPUT:
-{server_help}
-
-CLI HELP OUTPUT:  
-{cli_help}
-
-Extract ALL parameters and categorize them by importance and usage. Return ONLY this JSON structure with NO other text:
-
-{{
-  "common": {{
-    "--threads": "Number of threads",
-    "-c": "Context size"
-  }},
-  "server": {{
-    "--port": "Server port",
-    "--host": "Server host"
-  }},
-  "cli": {{
-    "--interactive": "Interactive mode",
-    "--prompt": "Initial prompt"
-  }}
-}}
-
-Categorization rules:
-- "common": Parameters that appear in BOTH server and CLI help (most important first)
-- "server": Parameters that appear ONLY in server help (most important first)  
-- "cli": Parameters that appear ONLY in CLI help (most important first)
-
-Within each category, order by importance:
-1. Essential parameters (context, threads, model loading)
-2. Performance parameters (batch size, memory settings)
-3. Behavior parameters (sampling, generation settings)
-4. Advanced/debug parameters
-
-Return ONLY the JSON object with NO other text, explanations, or markdown."""
-    
-    # Query LLM
-    response = query_local_llm(prompt, llm_endpoint)
-    print(f"DEBUG: LLM Response: {response}")
-    
-    # Check if response is an error
-    if response.startswith("Error:"):
-        return {"error": response}
-    
-    # Try to parse JSON from response
     try:
-        # Look for JSON in the response
-        start = response.find('{')
-        end = response.rfind('}') + 1
-        if start >= 0 and end > start:
-            json_str = response[start:end]
-            print(f"DEBUG: Extracted JSON: {json_str}")
-            return json.loads(json_str)
-        else:
-            return {"error": "No valid JSON found in LLM response"}
-    except json.JSONDecodeError as e:
-        return {"error": f"JSON parse error: {e}"}
+        return parse_help_text_directly(server_help, cli_help)
+    except Exception as e:
+        return {"error": f"Failed to parse help text: {e}"}
 
 
-def save_param_references_llm(server_path, cli_path, llm_endpoint=DEFAULT_LLM_ENDPOINT):
-    """Generate and save parameter references using LLM."""
+def save_param_references_directly(server_path, cli_path):
+    """Generate and save parameter references using direct parsing."""
     print(f"DEBUG: Extracting parameters from {server_path} and {cli_path}")
-    print(f"DEBUG: Using LLM endpoint: {llm_endpoint}")
     
-    result = extract_parameters_via_llm(server_path, cli_path, llm_endpoint)
+    result = extract_parameters_directly(server_path, cli_path)
     
     if "error" in result:
         print(f"DEBUG: Error in extraction: {result['error']}")

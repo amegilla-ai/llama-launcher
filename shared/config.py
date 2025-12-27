@@ -52,9 +52,8 @@ STATIC_TEMPLATES = PROJECT_ROOT / "static_site" / "templates"
 STATIC_OUTPUT    = DATA_ROOT / "static_site"   # <-- generated files live here
 
 # ----------------------------------------------------------------------
-# 5️⃣  LLM Configuration for parameter extraction
+# 5️⃣  Parameter references path
 # ----------------------------------------------------------------------
-DEFAULT_LLM_ENDPOINT = "http://localhost:8080"
 PARAM_REFERENCES_PATH = DATA_ROOT / "param_references.json"
 
 # ----------------------------------------------------------------------

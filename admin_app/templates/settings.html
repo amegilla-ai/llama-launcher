@@ -126,7 +126,7 @@
     
     <div class="nav-links">
         <a href="#launch-paths">Llama.cpp Launch Paths</a>
-        <a href="#llm-extraction">LLM Parameter Extraction</a>
+        <a href="#param-extraction">Parameter Extraction</a>
         <a href="#scan-folders">Folders to Scan</a>
         <a href="#default-params">Default Parameters</a>
     </div>
@@ -162,27 +162,17 @@
             </div>
         </div>
 
-        <!-- LLM Parameter Extraction Section -->
-        <div class="section" id="llm-extraction">
-            <h3>LLM Parameter Extraction</h3>
-            <p style="margin-bottom: 1.5rem; color: var(--muted);">Use a local LLM to automatically extract and parse parameters from llama.cpp help output.</p>
-            
-            <div class="field">
-                <label for="llm_endpoint">LLM Endpoint</label>
-                <input type="text" id="llm_endpoint" name="llm_endpoint" 
-                       value="{{ folders_cfg.llm_endpoint or 'http://localhost:8080' }}" 
-                       placeholder="http://localhost:8080">
-                <small style="color: var(--muted); display: block; margin-top: 0.3rem;">
-                    URL of your local LLM server (OpenAI-compatible API)
-                </small>
-            </div>
+        <!-- Parameter Extraction Section -->
+        <div class="section" id="param-extraction">
+            <h3>Parameter Extraction</h3>
+            <p style="margin-bottom: 1.5rem; color: var(--muted);">Automatically extract and parse parameters from llama.cpp help output.</p>
             
             <div style="margin-top: 1rem;">
-                <button type="button" class="btn-add" onclick="generateParamsLLM()">
-                    Generate Parameters via LLM
+                <button type="button" class="btn-add" onclick="generateParams()">
+                    Generate Parameters
                 </button>
                 <small style="color: var(--muted); display: block; margin-top: 0.5rem;">
-                    This will run --help on your binaries and send the output to the LLM for parsing
+                    This will run --help on your binaries and parse the output directly
                 </small>
             </div>
         </div>
@@ -424,9 +414,8 @@ window.onclick = function(event) {
     }
 }
 
-/* LLM Parameter Generation */
-function generateParamsLLM() {
-    const endpoint = document.getElementById('llm_endpoint').value;
+/* Parameter Generation */
+function generateParams() {
     const button = event.target;
     const originalText = button.textContent;
     
@@ -435,14 +424,9 @@ function generateParamsLLM() {
     button.textContent = 'Generating...';
     button.style.opacity = '0.6';
     
-    // Create form data
-    const formData = new FormData();
-    formData.append('llm_endpoint', endpoint);
-    
     // Submit to backend
-    fetch('/generate-params-llm', {
-        method: 'POST',
-        body: formData
+    fetch('/generate-params', {
+        method: 'POST'
     })
     .then(response => {
         if (response.ok) {
