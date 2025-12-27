@@ -191,7 +191,8 @@ def scan_models():
     """Scan configured folders for GGUF models."""
     folders = load_scan_cfg().get("folders", [])
     defaults_data = load_defaults()
-    defaults = defaults_data["params"]
+    default_params = defaults_data["params"]
+    default_comments = defaults_data["comments"]
     
     found_models = []
     for folder in folders:
@@ -203,13 +204,13 @@ def scan_models():
             file_size = format_file_size(gguf_file.stat().st_size)
             found_models.append((gguf_file.name, str(gguf_file), file_size))
     
-    # Add new models to database
+    # Add new models to database with default parameters and comments
     with sqlite3.connect(str(DB_PATH)) as conn:
         for name, path, size in found_models:
             conn.execute("""
                 INSERT OR IGNORE INTO model_configs (model_path, model_name, params_json, comments_json, file_size)
                 VALUES (?, ?, ?, ?, ?)
-            """, (path, name, json.dumps(defaults), json.dumps({}), size))
+            """, (path, name, json.dumps(default_params), json.dumps(default_comments), size))
             
         # Update file sizes for existing models
         for name, path, size in found_models:
