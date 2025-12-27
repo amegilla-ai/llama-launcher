@@ -9,7 +9,7 @@ from shared.config import ADMIN_TEMPLATES, STATIC_OUTPUT, DB_PATH
 from shared.utils import (
     init_db, scan_models, get_all_models, load_defaults, save_defaults,
     load_scan_cfg, save_scan_cfg, group_models_by_directory, render_static_page,
-    get_model_config, update_model_config, generate_param_references, load_param_references
+    get_model_config, update_model_config, load_param_references
 )
 
 import sqlite3
@@ -218,16 +218,6 @@ def static_page():
     except Exception:
         flash("❗ Failed to load static page.")
         return redirect(url_for("admin_home"))
-
-
-@app.route("/generate-param-refs", methods=["POST"])
-def generate_param_refs():
-    success, message = generate_param_references()
-    if success:
-        flash(f"✅ {message}")
-    else:
-        flash(f"❗ {message}")
-    return redirect(request.referrer or url_for("defaults"))
 
 
 @app.route("/static_site/<path:filename>")
