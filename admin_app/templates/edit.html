@@ -209,9 +209,9 @@ function renderMode(mode){
     const cfg = modelConfig[mode] || {};
     const comments = modelComments[mode] || {};
     
-    // Get parameter order from param_refs if available
-    const refParams = paramRefs[mode] || {};
-    const refKeys = Object.keys(refParams);
+    // Get parameter order from param_refs if available (now an array)
+    const refParams = paramRefs[mode] || [];
+    const refKeys = refParams.map(item => item.param);
     const cfgKeys = Object.keys(cfg);
     
     // Use param_refs order first, then any additional parameters

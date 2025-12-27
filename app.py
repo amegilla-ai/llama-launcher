@@ -68,28 +68,10 @@ def admin_home():
         for model in models:
             try:
                 params = json.loads(model["params_json"])
-                
-                # Handle old format migration for display
-                if "gpu" in params and "cpu" in params:
-                    # Old format - convert for display
-                    old_params = params
-                    new_params = {"common": {}, "server": {}, "cli": {}}
+                model["parsed_params"] = params
                     
-                    # Migrate old GPU/CPU structure to new common structure for display
-                    all_keys = set()
-                    if "gpu" in old_params:
-                        all_keys.update(old_params["gpu"].keys())
-                    if "cpu" in old_params:
-                        all_keys.update(old_params["cpu"].keys())
-                    
-                    for key in all_keys:
-                        gpu_val = old_params.get("gpu", {}).get(key, "")
-                        cpu_val = old_params.get("cpu", {}).get(key, "")
-                        new_params["common"][key] = {"gpu": gpu_val, "cpu": cpu_val}
-                    
-                    model["parsed_params"] = new_params
-                else:
-                    model["parsed_params"] = params
+            except json.JSONDecodeError:
+                model["parsed_params"] = {"common": {}, "server": {}, "cli": {}}
                     
             except json.JSONDecodeError:
                 model["parsed_params"] = {"common": {}, "server": {}, "cli": {}}

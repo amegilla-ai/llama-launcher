@@ -66,37 +66,6 @@ def get_model_config(path):
             params = json.loads(row["params_json"])
             comments = json.loads(row["comments_json"] or "{}")
             
-            # Handle old format migration
-            if "gpu" in params and "cpu" in params:
-                # Old format - migrate to new structure
-                old_params = params
-                old_comments = comments
-                
-                new_params = {"common": {}, "server": {}, "cli": {}}
-                new_comments = {"common": {}, "server": {}, "cli": {}}
-                
-                # Migrate old GPU/CPU structure to new common structure
-                all_keys = set()
-                if "gpu" in old_params:
-                    all_keys.update(old_params["gpu"].keys())
-                if "cpu" in old_params:
-                    all_keys.update(old_params["cpu"].keys())
-                
-                for key in all_keys:
-                    gpu_val = old_params.get("gpu", {}).get(key, "")
-                    cpu_val = old_params.get("cpu", {}).get(key, "")
-                    gpu_comment = old_comments.get("gpu", {}).get(key, "")
-                    cpu_comment = old_comments.get("cpu", {}).get(key, "")
-                    
-                    # Put everything in common for now
-                    new_params["common"][key] = {"gpu": gpu_val, "cpu": cpu_val}
-                    comment = gpu_comment or cpu_comment
-                    if comment:
-                        new_comments["common"][key] = comment
-                
-                params = new_params
-                comments = new_comments
-                
             return {
                 "model_path": path,
                 "model_name": row["model_name"],
@@ -382,16 +351,26 @@ def parse_help_text_directly(server_help, cli_help):
     import re
     
     def extract_params_by_section(text):
-        """Extract parameters organized by section."""
-        sections = {"common": {}, "specific": {}}
+        """Extract parameters organized by section, preserving order."""
+        from collections import OrderedDict
+        sections = {"common": OrderedDict(), "specific": OrderedDict()}
         lines = text.split('\n')
         current_section = None
+        current_param = None
+        current_desc = ""
         
-        for line in lines:
+        for i, line in enumerate(lines):
+            original_line = line
             line = line.strip()
             
             # Check for section headers
             if line.startswith('----- ') and line.endswith(' -----'):
+                # Save any pending parameter
+                if current_param and current_desc and current_section in sections:
+                    sections[current_section][current_param] = current_desc.strip()
+                current_param = None
+                current_desc = ""
+                
                 if 'common' in line.lower() or 'sampling' in line.lower():
                     current_section = "common"
                 elif 'example-specific' in line.lower():
@@ -400,12 +379,22 @@ def parse_help_text_directly(server_help, cli_help):
                     current_section = "other"
                 continue
             
-            # Skip empty lines and continuation lines
-            if not line or line.startswith('(') or current_section is None:
+            # Skip empty lines or if no section
+            if not line or current_section is None:
                 continue
                 
+            # Check if this is a continuation line (starts with spaces)
+            if original_line.startswith('                                        ') and current_param:
+                # This is a continuation of the previous description
+                current_desc += " " + line
+                continue
+            
             # Look for parameter lines (start with - or contain --)
             if re.match(r'^-[a-zA-Z]|^--[a-zA-Z]', line):
+                # Save previous parameter if exists
+                if current_param and current_desc and current_section in sections:
+                    sections[current_section][current_param] = current_desc.strip()
+                
                 # Extract parameter names and description
                 parts = re.split(r'\s{2,}', line, 1)  # Split on 2+ spaces
                 if len(parts) >= 2:
@@ -418,9 +407,18 @@ def parse_help_text_directly(server_help, cli_help):
                     
                     # Use shortest parameter name as key
                     if param_matches:
-                        main_param = min(param_matches, key=len)
-                        if current_section in sections:
-                            sections[current_section][main_param] = desc_part
+                        current_param = min(param_matches, key=len)
+                        current_desc = desc_part
+                    else:
+                        current_param = None
+                        current_desc = ""
+                else:
+                    current_param = None
+                    current_desc = ""
+        
+        # Save final parameter
+        if current_param and current_desc and current_section in sections:
+            sections[current_section][current_param] = current_desc.strip()
         
         return sections
     
