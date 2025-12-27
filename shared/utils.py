@@ -381,14 +381,27 @@ def parse_help_text_directly(server_help, cli_help):
     """Parse help text directly without LLM."""
     import re
     
-    def extract_params(text):
-        """Extract parameters from help text."""
-        params = {}
+    def extract_params_by_section(text):
+        """Extract parameters organized by section."""
+        sections = {"common": {}, "specific": {}}
         lines = text.split('\n')
+        current_section = None
         
-        for i, line in enumerate(lines):
+        for line in lines:
             line = line.strip()
-            if not line or line.startswith('----- ') or line.startswith('('):
+            
+            # Check for section headers
+            if line.startswith('----- ') and line.endswith(' -----'):
+                if 'common' in line.lower() or 'sampling' in line.lower():
+                    current_section = "common"
+                elif 'example-specific' in line.lower():
+                    current_section = "specific"
+                else:
+                    current_section = "other"
+                continue
+            
+            # Skip empty lines and continuation lines
+            if not line or line.startswith('(') or current_section is None:
                 continue
                 
             # Look for parameter lines (start with - or contain --)
@@ -405,28 +418,26 @@ def parse_help_text_directly(server_help, cli_help):
                     # Use shortest parameter name as key
                     if param_matches:
                         main_param = min(param_matches, key=len)
-                        params[main_param] = desc_part
+                        if current_section in sections:
+                            sections[current_section][main_param] = desc_part
         
-        return params
+        return sections
     
-    # Extract parameters from both
-    server_params = extract_params(server_help)
-    cli_params = extract_params(cli_help)
+    # Extract parameters from both files by section
+    server_sections = extract_params_by_section(server_help)
+    cli_sections = extract_params_by_section(cli_help)
     
-    # Find common parameters (appear in both)
+    # Common parameters are those in the "common" section of both files
     common_params = {}
-    server_only = {}
-    cli_only = {}
+    for param in server_sections["common"]:
+        if param in cli_sections["common"]:
+            common_params[param] = server_sections["common"][param]
     
-    for param, desc in server_params.items():
-        if param in cli_params:
-            common_params[param] = desc
-        else:
-            server_only[param] = desc
+    # Server-specific are from server's specific section
+    server_only = server_sections["specific"]
     
-    for param, desc in cli_params.items():
-        if param not in server_params:
-            cli_only[param] = desc
+    # CLI-specific are from CLI's specific section  
+    cli_only = cli_sections["specific"]
     
     return {
         "common": common_params,
