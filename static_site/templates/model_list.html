@@ -72,7 +72,7 @@
                   {% set full_cmd = binary_path + " -m " + m.model_path + " " + param_str %}
 
                   <div class="cmd-row">
-                    <span class="cmd-label">{{ mode|upper }} {{ bin|upper }}</span>
+                    <span class="cmd-label">{{ mode|upper }} {{ bin }}</span>
                     <button class="copy-btn" data-cmd="{{ full_cmd }}" aria-label="Copy command">
                       <svg viewBox="0 0 24 24"><use href="#copy-icon"/></svg>
                     </button>
