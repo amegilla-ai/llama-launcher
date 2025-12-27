@@ -454,6 +454,11 @@ Return ONLY the JSON object with NO other text, explanations, or markdown."""
     
     # Query LLM
     response = query_local_llm(prompt, llm_endpoint)
+    print(f"DEBUG: LLM Response: {response}")
+    
+    # Check if response is an error
+    if response.startswith("Error:"):
+        return {"error": response}
     
     # Try to parse JSON from response
     try:
@@ -462,6 +467,7 @@ Return ONLY the JSON object with NO other text, explanations, or markdown."""
         end = response.rfind('}') + 1
         if start >= 0 and end > start:
             json_str = response[start:end]
+            print(f"DEBUG: Extracted JSON: {json_str}")
             return json.loads(json_str)
         else:
             return {"error": "No valid JSON found in LLM response"}
