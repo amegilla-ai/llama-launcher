@@ -450,14 +450,21 @@ Only include parameters that appear in the help text. Focus on the most importan
 
 def save_param_references_llm(server_path, cli_path, llm_endpoint=DEFAULT_LLM_ENDPOINT):
     """Generate and save parameter references using LLM."""
+    print(f"DEBUG: Extracting parameters from {server_path} and {cli_path}")
+    print(f"DEBUG: Using LLM endpoint: {llm_endpoint}")
+    
     result = extract_parameters_via_llm(server_path, cli_path, llm_endpoint)
     
     if "error" in result:
+        print(f"DEBUG: Error in extraction: {result['error']}")
         return False, result["error"]
     
     try:
+        print(f"DEBUG: Saving to {PARAM_REFERENCES_PATH}")
         with open(PARAM_REFERENCES_PATH, "w") as f:
             json.dump(result, f, indent=2)
+        print("DEBUG: Save successful")
         return True, "Parameters extracted and saved successfully"
     except Exception as e:
+        print(f"DEBUG: Save failed: {e}")
         return False, f"Error saving parameters: {e}"

@@ -166,7 +166,8 @@ def save_settings():
         "llama_server_gpu_bin": request.form.get("server_gpu_bin", "").strip(),
         "llama_server_cpu_bin": request.form.get("server_cpu_bin", "").strip(),
         "llama_cli_gpu_bin": request.form.get("cli_gpu_bin", "").strip(),
-        "llama_cli_cpu_bin": request.form.get("cli_cpu_bin", "").strip()
+        "llama_cli_cpu_bin": request.form.get("cli_cpu_bin", "").strip(),
+        "llm_endpoint": request.form.get("llm_endpoint", "").strip()
     }
     save_scan_cfg(folders_cfg)
     
@@ -176,7 +177,7 @@ def save_settings():
     
     rebuild_static()
     flash("✅ Settings saved.")
-    return redirect(url_for("admin_home"))
+    return redirect(url_for("settings"))
 
 
 @app.route("/save-defaults", methods=["POST"])
@@ -255,27 +256,41 @@ def serve_static_assets(filename):
 @app.route("/generate-params-llm", methods=["POST"])
 def generate_params_llm():
     """Generate parameter references using LLM."""
-    cfg = load_scan_cfg()
+    try:
+        cfg = load_scan_cfg()
+        
+        # Get LLM endpoint from form or use saved value
+        llm_endpoint = request.form.get("llm_endpoint", "").strip()
+        if not llm_endpoint:
+            llm_endpoint = cfg.get("llm_endpoint", "http://localhost:8080")
+        
+        # Use server GPU binary as primary
+        server_path = cfg.get("llama_server_gpu_bin", "")
+        cli_path = cfg.get("llama_cli_gpu_bin", "")
+        
+        if not server_path or not cli_path:
+            flash("❗ Please configure binary paths in Folders to Scan first.")
+            return redirect(url_for("settings"))
+        
+        # Check if binaries exist
+        from pathlib import Path
+        if not Path(server_path).exists():
+            flash(f"❗ Server binary not found: {server_path}")
+            return redirect(url_for("settings"))
+        
+        if not Path(cli_path).exists():
+            flash(f"❗ CLI binary not found: {cli_path}")
+            return redirect(url_for("settings"))
+        
+        success, message = save_param_references_llm(server_path, cli_path, llm_endpoint)
+        
+        if success:
+            flash(f"✅ {message}")
+        else:
+            flash(f"❗ {message}")
     
-    # Get LLM endpoint from form or use default
-    llm_endpoint = request.form.get("llm_endpoint", "").strip()
-    if not llm_endpoint:
-        llm_endpoint = "http://localhost:8080"
-    
-    # Use server GPU binary as primary
-    server_path = cfg.get("llama_server_gpu_bin", "")
-    cli_path = cfg.get("llama_cli_gpu_bin", "")
-    
-    if not server_path or not cli_path:
-        flash("❗ Please configure binary paths in Folders to Scan first.")
-        return redirect(url_for("settings"))
-    
-    success, message = save_param_references_llm(server_path, cli_path, llm_endpoint)
-    
-    if success:
-        flash(f"✅ {message}")
-    else:
-        flash(f"❗ {message}")
+    except Exception as e:
+        flash(f"❗ Unexpected error: {str(e)}")
     
     return redirect(url_for("settings"))
 

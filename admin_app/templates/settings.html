@@ -170,7 +170,7 @@
             <div class="field">
                 <label for="llm_endpoint">LLM Endpoint</label>
                 <input type="text" id="llm_endpoint" name="llm_endpoint" 
-                       value="http://localhost:8080" 
+                       value="{{ folders_cfg.llm_endpoint or 'http://localhost:8080' }}" 
                        placeholder="http://localhost:8080">
                 <small style="color: var(--muted); display: block; margin-top: 0.3rem;">
                     URL of your local LLM server (OpenAI-compatible API)
