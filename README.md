@@ -10,8 +10,9 @@ A clean, web-based interface for managing and launching GGUF language models wit
 - 🚀 **Static Launcher**: Generate standalone HTML interface for launching models
 - 📊 **Overview Dashboard**: See all models and their configurations at a glance
 - 🗂️ **Organized by Folder**: Models grouped by directory for easy navigation
-- 🔧 **Parameter Discovery**: Extract available parameters directly from llama.cpp binaries
+- 🔧 **Parameter Discovery**: Extract available parameters directly from llama.cpp binaries using LLM
 - 🎨 **Modern UI**: Clean interface using Inter font with consistent styling
+- ⚡ **Settings Management**: Unified settings page for configuration, folders, and defaults
 
 ## Quick Start
 
@@ -29,13 +30,14 @@ A clean, web-based interface for managing and launching GGUF language models wit
 
 ## Setup Workflow
 
-1. **Configure Folders**: Click "Folders to Scan" to set directories containing your GGUF files
+1. **Configure Settings**: Click "Settings" to access the unified configuration page
 2. **Set Binary Paths**: Configure paths to your `llama-server` and `llama-cli` executables  
-3. **Generate Parameter References**: Click "Generate Parameter References" to extract available parameters from binaries
-4. **Set Default Parameters**: Click "Default Parameters" to configure default settings for new models
-5. **Scan Models**: Click "Scan for Models" to discover all GGUF files in configured directories
-6. **Edit Parameters**: Click "Edit" on any model to customize parameters with GPU/CPU values
-7. **Launch Interface**: Click "Launch Commands" to open the generated model launcher
+3. **Configure Folders**: Set directories containing your GGUF files
+4. **Generate Parameter References**: Use LLM extraction to discover available parameters from binaries
+5. **Set Default Parameters**: Configure default settings for new models with GPU/CPU values
+6. **Scan Models**: Click "Scan for Models" to discover all GGUF files in configured directories
+7. **Edit Parameters**: Click "Edit" on any model to customize parameters with GPU/CPU values
+8. **Launch Interface**: Click "Launch Commands" to open the generated model launcher
 
 ## Parameter Architecture
 
@@ -81,22 +83,27 @@ The system generates 4 command combinations for each model:
 
 ### Admin Interface (http://localhost:5001)
 - **Dashboard**: View all models with their Common/Server/CLI parameters in organized columns
+- **Settings**: Unified configuration page for binary paths, scan folders, and default parameters
 - **Edit Models**: Click any model name to customize launch parameters with GPU/CPU values
-- **Manage Defaults**: Set default parameters for new models with comments
-- **Configure Scanning**: Add/remove directories to scan for models
-- **Parameter Discovery**: Generate parameter references from llama.cpp binaries
+- **Parameter Discovery**: Generate parameter references from llama.cpp binaries using LLM
 - **Add from Llama.cpp**: Use modal interface to add official parameters with descriptions
 
 ### Static Launcher (`data/static_site/index.html`)
 - **Standalone HTML**: Works without the Flask server running
-- **Copy Commands**: Click buttons to copy launch commands to clipboard
+- **Copy Commands**: Click clipboard icons to copy launch commands to clipboard
 - **Organized Display**: Models grouped by directory with file sizes
 - **Four Command Types**: GPU-Server, CPU-Server, GPU-CLI, CPU-CLI combinations
 
 ## Configuration
 
+### Settings Page
+The unified settings page provides access to all configuration options:
+- **Llama.cpp Launch Paths**: Configure paths to your llama-server and llama-cli executables
+- **Folders to Scan**: Set directories containing your GGUF files (supports environment variables)
+- **Default Parameters**: Set default launch parameters for newly discovered models
+
 ### Default Parameters
-The app comes with sensible defaults organized by category:
+The app automatically creates sensible defaults when first run:
 - **Common**: `-c 16384 --no-mmap` (context size and memory mapping)
 - **Server**: `--port 8080 --host 0.0.0.0` (network configuration)
 - **CLI**: `--interactive` (interactive mode)
@@ -124,7 +131,7 @@ Set paths to your llama.cpp executables:
 
 ### Parameter Discovery
 Extract available parameters directly from your llama.cpp binaries:
-1. Configure binary paths in "Folders to Scan"
+1. Configure binary paths in Settings
 2. Click "Generate Parameter References" 
 3. System runs `--help` on both binaries
 4. Automatically categorizes parameters as Common/Server/CLI
@@ -145,7 +152,7 @@ Efficient storage of model configurations:
 
 ## Tips
 
-- **Backup**: The `data/` folder contains all your configurations
+- **Privacy**: The `data/` folder contains your personal configurations and is excluded from git
 - **Sharing**: Copy `data/static_site/index.html` to share launcher with others
 - **Cleanup**: Delete models from database if files are moved/removed
 - **Defaults**: Set good defaults before scanning to save time on individual models
