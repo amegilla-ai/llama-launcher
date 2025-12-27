@@ -148,11 +148,34 @@ def save():
     return redirect(url_for("admin_home"))
 
 
-@app.route("/defaults")
-def defaults():
-    return render_template("defaults.html", 
-                         defaults=load_defaults(),
-                         param_refs=load_param_references())
+@app.route("/settings")
+def settings():
+    defaults_data = load_defaults()
+    return render_template("settings.html", 
+                         defaults=defaults_data,
+                         param_refs=load_param_references(),
+                         folders_cfg=load_scan_cfg())
+
+
+@app.route("/save-settings", methods=["POST"])
+def save_settings():
+    # Save folder configuration
+    folders_cfg = {
+        "folders": [f.strip() for f in request.form.get("folders", "").splitlines() if f.strip()],
+        "llama_server_gpu_bin": request.form.get("server_gpu_bin", "").strip(),
+        "llama_server_cpu_bin": request.form.get("server_cpu_bin", "").strip(),
+        "llama_cli_gpu_bin": request.form.get("cli_gpu_bin", "").strip(),
+        "llama_cli_cpu_bin": request.form.get("cli_cpu_bin", "").strip()
+    }
+    save_scan_cfg(folders_cfg)
+    
+    # Save default parameters
+    new_params, new_comments = parse_form_pairs(request.form)
+    save_defaults(new_params, new_comments)
+    
+    rebuild_static()
+    flash("✅ Settings saved.")
+    return redirect(url_for("admin_home"))
 
 
 @app.route("/save-defaults", methods=["POST"])
