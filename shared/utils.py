@@ -41,6 +41,10 @@ def init_db():
             conn.execute("ALTER TABLE model_configs ADD COLUMN file_size TEXT DEFAULT 'N/A'")
         except sqlite3.OperationalError:
             pass  # Column already exists
+        try:
+            conn.execute("ALTER TABLE model_configs ADD COLUMN include_in_ini INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
 
 
 def get_all_models():
@@ -56,7 +60,7 @@ def get_model_config(path):
         with sqlite3.connect(str(DB_PATH)) as conn:
             conn.row_factory = sqlite3.Row
             row = conn.execute(
-                "SELECT model_name, params_json, comments_json FROM model_configs WHERE model_path=?", 
+                "SELECT model_name, params_json, comments_json, include_in_ini FROM model_configs WHERE model_path=?", 
                 (path,)
             ).fetchone()
             
@@ -70,20 +74,31 @@ def get_model_config(path):
                 "model_path": path,
                 "model_name": row["model_name"],
                 "model_config": params,
-                "model_comments": comments
+                "model_comments": comments,
+                "include_in_ini": bool(row["include_in_ini"])
             }
     except (sqlite3.Error, json.JSONDecodeError):
         return None
 
 
-def update_model_config(path, params, comments=None):
+def update_model_config(path, params, comments=None, include_in_ini=None):
     """Update model configuration in database."""
     try:
         with sqlite3.connect(str(DB_PATH)) as conn:
-            if comments is not None:
+            if comments is not None and include_in_ini is not None:
+                conn.execute(
+                    "UPDATE model_configs SET params_json=?, comments_json=?, include_in_ini=? WHERE model_path=?",
+                    (json.dumps(params), json.dumps(comments), int(include_in_ini), path)
+                )
+            elif comments is not None:
                 conn.execute(
                     "UPDATE model_configs SET params_json=?, comments_json=? WHERE model_path=?",
                     (json.dumps(params), json.dumps(comments), path)
+                )
+            elif include_in_ini is not None:
+                conn.execute(
+                    "UPDATE model_configs SET params_json=?, include_in_ini=? WHERE model_path=?",
+                    (json.dumps(params), int(include_in_ini), path)
                 )
             else:
                 conn.execute(
@@ -714,6 +729,10 @@ def generate_llama_server_ini():
     # Model sections
     # -------------------------
     for row in get_all_models():
+        # Skip models not flagged for INI inclusion
+        if not row.get("include_in_ini"):
+            continue
+            
         config = get_model_config(row["model_path"])
         if not config:
             continue

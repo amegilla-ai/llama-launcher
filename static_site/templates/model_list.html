@@ -99,7 +99,12 @@
         {% for m in models %}
           <article class="model-card">
             <header class="model-header">
-              <strong class="model-name">{{ m.model_name }}</strong>
+              <strong class="model-name">
+                {{ m.model_name }}
+                {% if m.include_in_ini %}
+                <span style="background:#10b981; color:white; font-size:.7rem; padding:.2rem .4rem; border-radius:4px; margin-left:.5rem;">INI</span>
+                {% endif %}
+              </strong>
               <span class="size">{{ m.file_size }}</span>
             </header>
             <p class="path">{{ m.model_path }}</p>

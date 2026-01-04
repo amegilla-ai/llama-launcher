@@ -413,7 +413,12 @@
                             {% for model in models %}
                             <tr>
                                 <td>
-                                    <div class="model-name">{{ model.model_name }}</div>
+                                    <div class="model-name">
+                                        {{ model.model_name }}
+                                        {% if model.include_in_ini %}
+                                        <span style="background:#10b981; color:white; font-size:.7rem; padding:.2rem .4rem; border-radius:4px; margin-left:.5rem;">INI</span>
+                                        {% endif %}
+                                    </div>
                                 </td>
                                 <td>{{ model.file_size }}</td>
                                 <td>

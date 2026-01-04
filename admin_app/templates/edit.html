@@ -115,6 +115,14 @@
     <form method="POST" action="/save" id="editForm">
         <input type="hidden" name="model_path" value="{{model_path}}">
         
+        <!-- INI Generation Flag -->
+        <div style="background:var(--card); border:1px solid var(--border); border-radius:.8rem; padding:.8rem; margin-bottom:1rem; box-shadow:0 2px 5px rgba(0,0,0,.04);">
+            <label style="display:flex; align-items:center; gap:.5rem; font-weight:500; cursor:pointer;">
+                <input type="checkbox" name="include_in_ini" value="1" {% if include_in_ini %}checked{% endif %} style="width:auto; margin:0;">
+                Include in llama-server INI generation
+            </label>
+        </div>
+        
         <!-- Common Parameters -->
         <div class="mode-section" style="margin-bottom: 1rem;">
             <div class="mode-header">Common Parameters</div>

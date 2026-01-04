@@ -143,7 +143,9 @@ def save():
         return redirect(url_for("admin_home"))
     
     new_params, new_comments = parse_form_pairs(request.form)
-    if update_model_config(path, new_params, new_comments):
+    include_in_ini = bool(request.form.get("include_in_ini"))
+    
+    if update_model_config(path, new_params, new_comments, include_in_ini):
         rebuild_static()
         flash("✅ Model parameters saved.")
     else:
