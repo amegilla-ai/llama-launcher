@@ -15,7 +15,7 @@
 
   {% if llama_server_commands %}
   <div class="server-commands">
-    <h3>Commands for llama-server UI with dynamic model loading</h3>
+    <h3>Launch Server Commands</h3>
     
     <div class="command-section">
       <label><strong>GPU Server:</strong></label>
@@ -34,6 +34,49 @@
     </div>
   </div>
 
+  <script>
+  function copyCommand(elementId) {
+    const input = document.getElementById(elementId);
+    
+    // Modern approach using Clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(input.value).then(() => {
+        showCopyFeedback(input);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+        fallbackCopy(input);
+      });
+    } else {
+      // Fallback for older browsers or non-HTTPS
+      fallbackCopy(input);
+    }
+  }
+
+  function fallbackCopy(input) {
+    input.select();
+    input.setSelectionRange(0, 99999); // For mobile devices
+    
+    try {
+      document.execCommand('copy');
+      showCopyFeedback(input);
+    } catch (err) {
+      alert('Failed to copy. Please copy manually.');
+    }
+  }
+
+  function showCopyFeedback(input) {
+    const btn = input.nextElementSibling;
+    const originalText = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    btn.style.background = '#28a745';
+    
+    setTimeout(() => {
+      btn.textContent = originalText;
+      btn.style.background = '';
+    }, 2000);
+  }
+  </script>
+
   <style>
   .server-commands {
     margin: 20px 0;
@@ -41,11 +84,6 @@
     border: 1px solid #ddd;
     border-radius: 5px;
     background: #f9f9f9;
-  }
-
-  .server-commands h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
   }
 
   .command-section {
@@ -76,7 +114,6 @@
     border-radius: 3px;
     cursor: pointer;
     transition: background 0.3s;
-    white-space: nowrap;
   }
 
   .copy-btn:hover {
@@ -146,12 +183,11 @@
                   
                   {% set param_str = param_parts|join(' ') %}
                   {% set full_cmd = binary_path + " -m " + m.model_path + " " + param_str %}
-                  {% set unique_id = "cmd_" ~ directory|replace('/', '_')|replace(' ', '_') ~ "_" ~ loop.index0 ~ "_" ~ m.model_name|replace('.', '_')|replace(' ', '_') ~ "_" ~ mode ~ "_" ~ bin %}
 
                   <div class="cmd-row">
                     <span class="cmd-label">{{ mode|upper }} {{ bin }}</span>
                     <button class="copy-btn" data-cmd="{{ full_cmd }}" aria-label="Copy command">
-                    <svg viewBox="0 0 24 24"><use href="#copy-icon"/></svg>
+                      <svg viewBox="0 0 24 24"><use href="#copy-icon"/></svg>
                     </button>
                     <code class="cmd">{{ full_cmd }}</code>
                   </div>
@@ -166,54 +202,12 @@
   {% endif %}
 </div>
 
-<!-- Inline copy-icon sprite -->
+<!-- Inline copy‑icon sprite (same as before) -->
 <svg style="display:none;">
   <symbol id="copy-icon" viewBox="0 0 24 24">
     <path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 18H8V7h11v16z"/>
   </symbol>
 </svg>
 
-
-<script>
-// For server commands (input fields)
-function copyCommand(elementId) {
-  const input = document.getElementById(elementId);
-  
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(input.value).then(() => {
-      const btn = input.nextElementSibling;
-      const originalText = btn.textContent;
-      btn.textContent = '✓ Copied!';
-      btn.style.background = '#28a745';
-      
-      setTimeout(() => {
-        btn.textContent = originalText;
-        btn.style.background = '';
-      }, 2000);
-    }).catch(err => {
-      console.error('Failed to copy:', err);
-    });
-  }
-}
-
-// For model commands - same as your copy.js
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.copy-btn[data-cmd]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const cmd = btn.getAttribute('data-cmd');
-      navigator.clipboard.writeText(cmd).then(() => {
-        const svg = btn.querySelector('svg');
-        const original = btn.innerHTML;
-        btn.innerHTML = '✓';
-        btn.style.background = '#28a745';
-        setTimeout(() => {
-          btn.innerHTML = original;
-          btn.style.background = '';
-        }, 2000);
-      });
-    });
-  });
-});
-</script>
+<script src="{{ js_url }}"></script>
 </body>
-</html>

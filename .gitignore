@@ -18,3 +18,4 @@ data/
 Thumbs.db
 
 .venv
+.aider*

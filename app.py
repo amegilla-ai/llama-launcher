@@ -3,7 +3,7 @@
 Flask admin interface for managing GGUF model configurations.
 """
 import json
-from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
+from flask import Flask, Response, render_template, request, redirect, url_for, flash, send_from_directory
 
 from shared.config import ADMIN_TEMPLATES, STATIC_OUTPUT, DB_PATH
 from shared.utils import (
@@ -17,7 +17,6 @@ import sqlite3
 
 app = Flask(__name__, template_folder=str(ADMIN_TEMPLATES))
 app.secret_key = "dev-secret"  # Change for production
-
 
 def rebuild_static():
     """Regenerate static site from current database."""
@@ -167,6 +166,7 @@ def save_settings():
     # Save folder configuration
     folders_cfg = {
         "folders": [f.strip() for f in request.form.get("folders", "").splitlines() if f.strip()],
+        "llama_server_models_dir": request.form.get("llama_server_models_dir", "").strip(),
         "llama_server_gpu_bin": request.form.get("server_gpu_bin", "").strip(),
         "llama_server_cpu_bin": request.form.get("server_cpu_bin", "").strip(),
         "llama_cli_gpu_bin": request.form.get("cli_gpu_bin", "").strip(),
@@ -201,6 +201,7 @@ def folders():
 def save_folders_route():
     cfg = {
         "folders": [f.strip() for f in request.form.get("folders", "").splitlines() if f.strip()],
+        "llama_server_models_dir": request.form.get("llama_server_models_dir", "").strip(),
         "llama_server_gpu_bin": request.form.get("server_gpu_bin", "").strip(),
         "llama_server_cpu_bin": request.form.get("server_cpu_bin", "").strip(),
         "llama_cli_gpu_bin": request.form.get("cli_gpu_bin", "").strip(),
@@ -215,7 +216,6 @@ def save_folders_route():
     rebuild_static()
     flash("✅ Configuration saved.")
     return redirect(url_for("admin_home"))
-
 
 @app.route("/delete")
 def delete_model():
@@ -246,7 +246,6 @@ def static_page():
     except Exception:
         flash("❗ Failed to load static page.")
         return redirect(url_for("admin_home"))
-
 
 @app.route("/static_site/<path:filename>")
 def serve_static_assets(filename):
@@ -291,7 +290,6 @@ def generate_params():
         flash(f"❗ Unexpected error: {str(e)}")
     
     return redirect(url_for("settings"))
-
 
 if __name__ == "__main__":
     init_db()

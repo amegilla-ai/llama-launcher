@@ -187,8 +187,25 @@
                 <label for="folders">Folders to scan (one per line)</label>
                 <textarea id="folders" name="folders">{{ folders_cfg.folders|join('\n') }}</textarea>
             </div>
-        </div>
 
+            <!-- llama server default models directory -->
+            <div class="field" style="margin-top: 1.5rem;">
+                <label for="llama_server_models_dir">Llama Server Models Directory</label>
+                <small style="color:var(--muted);display:block;margin-bottom:.5rem;">
+                    Select which folder llama-server should use for --models-dir to find models for auto-loading (leave empty to use first folder)
+                </small>
+                <select id="llama_server_models_dir" name="llama_server_models_dir" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:6px;margin-bottom:.5rem;">
+                    <option value="">-- Use first folder from list --</option>
+                    {% for folder in folders_cfg.folders %}
+                    <option value="{{ folder }}" {% if folders_cfg.llama_server_models_dir == folder %}selected{% endif %}>{{ folder }}</option>
+                    {% endfor %}
+                </select>
+                <small style="color:var(--muted);display:block;margin-bottom:.3rem;">Or enter custom path:</small>
+                <input type="text" name="llama_server_models_dir_custom" placeholder="Custom path (overrides dropdown)"
+                        value="{% if folders_cfg.llama_server_models_dir and folders_cfg.llama_server_models_dir not in folders_cfg.folders %}{{ folders_cfg.llama_server_models_dir }}{% endif %}">
+            </div>
+        </div>
+    
         <!-- Default Parameters Section -->
         <div class="section" id="default-params">
             <h3>Default Parameters</h3>

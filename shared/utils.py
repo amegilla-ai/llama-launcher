@@ -13,7 +13,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from .config import (
     DB_PATH, DEFAULTS_PATH, SCAN_CFG_PATH, DEFAULT_SCAN_CFG,
-    STATIC_TEMPLATES, STATIC_OUTPUT, PARAM_REFERENCES_PATH
+    STATIC_TEMPLATES, STATIC_OUTPUT, PARAM_REFERENCES_PATH, DATA_ROOT
 )
 
 
@@ -97,6 +97,32 @@ def update_model_config(path, params, comments=None):
 
 # Configuration management
 def load_defaults():
+    """Load global default parameters."""
+    if DEFAULTS_PATH.exists():
+        try:
+            with open(DEFAULTS_PATH, "rb") as f:
+                return pickle.load(f)
+        except Exception:
+            pass
+    
+    return {
+        "params": {
+            "common": {
+                "-c": {"gpu": "16384", "cpu": "16384"},
+                "--no-mmap": {"gpu": "", "cpu": ""}
+            },
+            "server": {
+                "--port": {"gpu": "8080", "cpu": "8080"},
+                "--host": {"gpu": "0.0.0.0", "cpu": "0.0.0.0"}
+            },
+            "cli": {
+                "--interactive": {"gpu": "", "cpu": ""}
+            }
+        },
+        "comments": {"common": {}, "server": {}, "cli": {}}
+    }
+
+def load_defaults_old():
     """Load global default parameters."""
     if DEFAULTS_PATH.exists():
         try:
@@ -252,14 +278,145 @@ def group_models_by_directory(models):
     
     return dict(sorted(groups.items()))
 
-
 def render_static_page(model_groups):
+    """Render static HTML page from model data."""
+    # Import the same utility used in your INI generator
+    from .utils import load_defaults 
+    
+    try:
+        # Parse JSON configs for template
+        for models in model_groups.values():
+            for model in models:
+                try:
+                    model["params"] = json.loads(model["params_json"])
+                except json.JSONDecodeError:
+                    model["params"] = {"common": {}, "server": {}, "cli": {}}
+        
+        cfg = load_scan_cfg()
+        # Load defaults to get the server settings
+        defaults = load_defaults()
+        
+        env = Environment(
+            loader=FileSystemLoader(str(STATIC_TEMPLATES)),
+            autoescape=select_autoescape(["html", "xml"])
+        )
+
+        server_gpu_bin = cfg.get("llama_server_gpu_bin", "llama-server")
+        server_cpu_bin = cfg.get("llama_server_cpu_bin", "llama-server")
+        ini_path = (DATA_ROOT / "llama-server.ini").resolve()
+        
+        # Extract host and port from defaults nested structure
+        # We use .get() safely and check for 'gpu' value
+        server_params = defaults.get("params", {}).get("server", {})
+        host = server_params.get("--host", {}).get("gpu")
+        port = server_params.get("--port", {}).get("gpu")
+
+        # Build strings: Only add the flag if the value exists
+        host_flag = f" --host {host}" if host else ""
+        port_flag = f" --port {port}" if port else ""
+
+        llama_server_commands = {
+            "gpu": f'{server_gpu_bin} --models-preset {ini_path} {host_flag}{port_flag}'.strip(),
+            "cpu": f'{server_cpu_bin} --models-preset {ini_path} {host_flag}{port_flag}'.strip()
+        }
+
+        # Render template...
+        template = env.get_template("model_list.html")
+        rendered = template.render(
+            model_groups=model_groups,
+            SERVER_GPU_BIN=cfg.get("llama_server_gpu_bin", ""),
+            SERVER_CPU_BIN=cfg.get("llama_server_cpu_bin", ""),
+            CLI_GPU_BIN=cfg.get("llama_cli_gpu_bin", ""),
+            CLI_CPU_BIN=cfg.get("llama_cli_cpu_bin", ""),
+            llama_server_commands=llama_server_commands,
+            css_url="../../static_site/assets/style.css",
+            js_url="../../static_site/assets/copy.js"
+        )
+        
+        # Write output...
+        output_file = STATIC_OUTPUT / "index.html"  
+        STATIC_OUTPUT.mkdir(parents=True, exist_ok=True)
+        if output_file.exists():
+            output_file.unlink()    
+        output_file.write_text(rendered, encoding="utf-8")
+        
+    except Exception as e:
+        print(f"❗ Failed to render static page: {e}")
+
+def render_static_page_0(model_groups):
     """Render static HTML page from model data."""
     try:
         # Parse JSON configs for template
         for models in model_groups.values():
             for model in models:
                 try:
+                    model["params"] = json.loads(model["params_json"])
+                except json.JSONDecodeError:
+                    model["params"] = {"common": {}, "server": {}, "cli": {}}
+        
+        # Get binary paths
+        cfg = load_scan_cfg()
+        
+        # Setup Jinja environment
+        env = Environment(
+            loader=FileSystemLoader(str(STATIC_TEMPLATES)),
+            autoescape=select_autoescape(["html", "xml"])
+        )
+
+        # Build GPU and CPU server commands
+        server_gpu_bin = cfg.get("llama_server_gpu_bin", "llama-server")
+        server_cpu_bin = cfg.get("llama_server_cpu_bin", "llama-server")
+        ini_path = (DATA_ROOT / "llama-server.ini").resolve()
+        
+        # Get the llama-server models directory (or fallback to first folder)
+        models_dir = cfg.get("llama_server_models_dir", "")
+        if not models_dir:
+            folders = cfg.get("folders", [])
+            models_dir = folders[0] if folders else "./models"
+        
+        models_dir = str(Path(os.path.expanduser(os.path.expandvars(models_dir))).resolve())
+        
+        llama_server_commands = {
+            "gpu": f'{server_gpu_bin} --models-preset {ini_path} --models-dir {models_dir}',
+            "cpu": f'{server_cpu_bin} --models-preset {ini_path} --models-dir {models_dir}'
+        }
+
+        # Render template with relative paths for standalone use
+        template = env.get_template("model_list.html")
+        rendered = template.render(
+            model_groups=model_groups,
+            SERVER_GPU_BIN=cfg.get("llama_server_gpu_bin", ""),
+            SERVER_CPU_BIN=cfg.get("llama_server_cpu_bin", ""),
+            CLI_GPU_BIN=cfg.get("llama_cli_gpu_bin", ""),
+            CLI_CPU_BIN=cfg.get("llama_cli_cpu_bin", ""),
+            llama_server_commands=llama_server_commands,
+            css_url="../../static_site/assets/style.css",
+            js_url="../../static_site/assets/copy.js"
+        )
+        
+        # Write output
+        output_file = STATIC_OUTPUT / "index.html"  
+        STATIC_OUTPUT.mkdir(parents=True, exist_ok=True)
+        if output_file.exists():
+            output_file.unlink()    
+        (STATIC_OUTPUT / "index.html").write_text(rendered, encoding="utf-8")
+    except Exception as e:
+        print(f"❗ Failed to render static page: {e}")
+    
+    try:
+        generate_llama_server_ini()
+        print("✅ Generated llama-server.ini successfully.")
+    except Exception as e:
+        print(f"❗ Failed to generate llama-server.ini: {e}")
+
+def render_static_page_old_1(model_groups):
+    """Render static HTML page from model data."""
+    try:
+        # Parse JSON configs for template
+        for models in model_groups.values():
+            for model in models:
+                try:
+
                     params = json.loads(model["params_json"])
                     
                     # Handle old format migration
@@ -295,7 +452,12 @@ def render_static_page(model_groups):
             loader=FileSystemLoader(str(STATIC_TEMPLATES)),
             autoescape=select_autoescape(["html", "xml"])
         )
-        
+
+        server_bin = cfg.get("llama_server_gpu_bin", "llama-server")
+        ini_path = STATIC_OUTPUT.parent / "llama-server.ini"
+        ini_path = ini_path.resolve()
+        llama_server_cmd = f"{server_bin} --config {ini_path}"
+
         # Render template with relative paths for standalone use
         template = env.get_template("model_list.html")
         rendered = template.render(
@@ -304,6 +466,7 @@ def render_static_page(model_groups):
             SERVER_CPU_BIN=cfg.get("llama_server_cpu_bin", ""),
             CLI_GPU_BIN=cfg.get("llama_cli_gpu_bin", ""),
             CLI_CPU_BIN=cfg.get("llama_cli_cpu_bin", ""),
+            llama_server_cmd=llama_server_cmd, 
             css_url="../../static_site/assets/style.css",
             js_url="../../static_site/assets/copy.js"
         )
@@ -313,6 +476,12 @@ def render_static_page(model_groups):
         (STATIC_OUTPUT / "index.html").write_text(rendered, encoding="utf-8")
     except Exception as e:
         print(f"❗ Failed to render static page: {e}")
+    
+    try:
+        generate_llama_server_ini()
+        print("✅ Generated llama-server.ini successfully.")
+    except Exception as e:
+        print(f"❗ Failed to generate llama-server.ini: {e}")
 
 
 def get_llama_server_bin():
@@ -497,3 +666,95 @@ def save_param_references_directly(server_path, cli_path):
     except Exception as e:
         print(f"DEBUG: Save failed: {e}")
         return False, f"Error saving parameters: {e}"
+
+def generate_llama_server_ini():
+    """
+    Generate a single llama-server.ini containing all models.
+    """
+    from .config import DATA_ROOT
+    from .utils import get_all_models, get_model_config, load_defaults
+
+    defaults = load_defaults()
+    params = defaults["params"]
+    comments = defaults["comments"]
+
+    lines = []
+    lines.append("version = 1")
+    lines.append("")
+
+    # -------------------------
+    # Global section
+    # -------------------------
+    lines.append("[*]")
+
+    for key, vals in params.get("common", {}).items():
+        val = vals.get("gpu", "")
+        comment = comments.get("common", {}).get(key)
+
+        if comment:
+            lines.append(f"; {comment}")
+
+        # Remove leading dashes from key
+        clean_key = key.lstrip('-')
+        
+        if val:
+            lines.append(f"{clean_key} = {val}")
+        else:
+            lines.append(f"{clean_key} = true")
+
+    lines.append("")
+
+    # -------------------------
+    # Model sections
+    # -------------------------
+    for row in get_all_models():
+        config = get_model_config(row["model_path"])
+        if not config:
+            continue
+
+        name = config["model_name"]
+        model_cfg = config["model_config"]
+        model_comments = config["model_comments"]
+
+        is_named = "/" in name or ":" in name
+        
+        # Make section name unique
+        if is_named:
+            section = name
+        else:
+            from pathlib import Path
+            model_filename = Path(config['model_path']).stem
+            section = model_filename.replace(" ", "_").replace("(", "").replace(")", "").replace(".", "_")
+
+        lines.append(f"[{section}]")
+
+        if not is_named:
+            from pathlib import Path
+            lines.append(f"model = {Path(config['model_path']).absolute()}")
+
+        def render(section_name):
+            for k, v in model_cfg.get(section_name, {}).items():
+                val = v.get("gpu", "")
+                comment = model_comments.get(section_name, {}).get(k)
+
+                if comment:
+                    lines.append(f"; {comment}")
+
+                # Remove leading dashes from key
+                clean_key = k.lstrip('-')
+                
+                if val:
+                    lines.append(f"{clean_key} = {val}")
+                else:
+                    lines.append(f"{clean_key} = true")
+
+        render("common")
+        render("server")
+        lines.append("")
+
+    ini_path = DATA_ROOT / "llama-server.ini"
+    ini_path.write_text("\n".join(lines), encoding="utf-8")
+    
+    print(f"✅ Generated INI with {len([l for l in lines if l.startswith('[') and l != '[*]'])} model sections")
+
+    return ini_path

@@ -39,6 +39,7 @@ DEFAULT_PARAMS = {
 DEFAULT_FOLDERS = ["~/.cache", "~/ComfyUI"]
 DEFAULT_SCAN_CFG = {
     "folders": DEFAULT_FOLDERS,
+    "llama_server_models_dir": "",
     "llama_server_gpu_bin": os.path.expanduser("~/llama.cpp/build/bin/llama-server"),
     "llama_server_cpu_bin": os.path.expanduser("~/llama.cpp/build/bin/llama-server"),
     "llama_cli_gpu_bin":    os.path.expanduser("~/llama.cpp/build/bin/llama-cli"),
@@ -50,6 +51,7 @@ DEFAULT_SCAN_CFG = {
 # ----------------------------------------------------------------------
 STATIC_TEMPLATES = PROJECT_ROOT / "static_site" / "templates"
 STATIC_OUTPUT    = DATA_ROOT / "static_site"   # <-- generated files live here
+INI_OUTPUT = DATA_ROOT / "ini" # path for the llama-server ini file
 
 # ----------------------------------------------------------------------
 # 5️⃣  Parameter references path

@@ -51,6 +51,28 @@
             <input type="text" id="cli_cpu_bin" name="cli_cpu_bin"
                    value="{{ folders_cfg.llama_cli_cpu_bin|e }}">
         </div>
+<div class="field">
+            <label for="cli_cpu_bin">llama.cpp CLI CPU binary</label>
+            <input type="text" id="cli_cpu_bin" name="cli_cpu_bin"
+                   value="{{ folders_cfg.llama_cli_cpu_bin|e }}">
+        </div>
+
+        <!-- adding default folder for llama server -->
+        <div class="field">
+            <label for="llama_server_models_dir">Llama Server Models Directory</label>
+            <small style="color:var(--muted);display:block;margin-bottom:.5rem;">
+                Select which folder llama-server should use for --models-dir (leave empty to use first folder)
+            </small>
+            <select id="llama_server_models_dir" name="llama_server_models_dir" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:6px;margin-bottom:.5rem;">
+                <option value="">-- Use first folder from list --</option>
+                {% for folder in folders_cfg.folders %}
+                <option value="{{ folder }}" {% if folders_cfg.llama_server_models_dir == folder %}selected{% endif %}>{{ folder }}</option>
+                {% endfor %}
+            </select>
+            <small style="color:var(--muted);display:block;margin-bottom:.3rem;">Or enter custom path:</small>
+            <input type="text" name="llama_server_models_dir_custom" placeholder="Custom path (overrides dropdown)"
+                   value="{% if folders_cfg.llama_server_models_dir and folders_cfg.llama_server_models_dir not in folders_cfg.folders %}{{ folders_cfg.llama_server_models_dir }}{% endif %}">
+        </div>
 
         <!-- ---- Folder list ------------------------------------------ -->
         <div class="field">
