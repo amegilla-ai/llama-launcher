@@ -89,6 +89,47 @@
   </style>
   {% endif %}
 
+  <!-- INI Commands Section -->
+  <div class="server-commands">
+    <h3>llama-server INI Commands</h3>
+    <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.9rem;">
+      Use these commands to run llama-server with the generated INI configuration. 
+      <strong>INI-only</strong> uses flagged models. <strong>INI+Folder</strong> also scans the models directory for additional models.
+    </p>
+    
+    <div class="command-section">
+      <label><strong>GPU INI Only:</strong></label>
+      <div class="command-input-group">
+        <input type="text" value="llama-server --config-file llama-server.ini{{ ' ' + ini_commands.gpu if ini_commands.gpu else '' }}" readonly id="gpuIniCmd" class="command-input">
+        <button onclick="copyCommand('gpuIniCmd')" class="copy-btn">Copy</button>
+      </div>
+    </div>
+    
+    <div class="command-section">
+      <label><strong>CPU INI Only:</strong></label>
+      <div class="command-input-group">
+        <input type="text" value="llama-server --config-file llama-server.ini{{ ' ' + ini_commands.cpu if ini_commands.cpu else '' }}" readonly id="cpuIniCmd" class="command-input">
+        <button onclick="copyCommand('cpuIniCmd')" class="copy-btn">Copy</button>
+      </div>
+    </div>
+    
+    <div class="command-section">
+      <label><strong>GPU INI + Folder:</strong></label>
+      <div class="command-input-group">
+        <input type="text" value="llama-server --config-file llama-server.ini --models-dir {{ models_dir }}{{ ' ' + ini_commands.gpu if ini_commands.gpu else '' }}" readonly id="gpuIniFolderCmd" class="command-input">
+        <button onclick="copyCommand('gpuIniFolderCmd')" class="copy-btn">Copy</button>
+      </div>
+    </div>
+    
+    <div class="command-section">
+      <label><strong>CPU INI + Folder:</strong></label>
+      <div class="command-input-group">
+        <input type="text" value="llama-server --config-file llama-server.ini --models-dir {{ models_dir }}{{ ' ' + ini_commands.cpu if ini_commands.cpu else '' }}" readonly id="cpuIniFolderCmd" class="command-input">
+        <button onclick="copyCommand('cpuIniFolderCmd')" class="copy-btn">Copy</button>
+      </div>
+    </div>
+  </div>
+
   {% if not model_groups %}
     <p class="empty">No models found.</p>
   {% else %}

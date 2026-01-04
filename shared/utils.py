@@ -343,6 +343,8 @@ def render_static_page(model_groups):
             CLI_GPU_BIN=cfg.get("llama_cli_gpu_bin", ""),
             CLI_CPU_BIN=cfg.get("llama_cli_cpu_bin", ""),
             llama_server_commands=llama_server_commands,
+            ini_commands={"gpu": f"{host_flag}{port_flag}".strip(), "cpu": f"{host_flag}{port_flag}".strip()},
+            models_dir=cfg.get("llama_server_models_dir", "/path/to/models"),
             css_url="../../static_site/assets/style.css",
             js_url="../../static_site/assets/copy.js"
         )
@@ -355,7 +357,7 @@ def render_static_page(model_groups):
         output_file.write_text(rendered, encoding="utf-8")
 
         try:
-            generate_llama_server_ini()
+            generate_llama_server_ini_models_only()
             print("✅ Generated llama-server.ini successfully.")
         except Exception as e:
             print(f"❗ Failed to generate llama-server.ini: {e}")
@@ -687,9 +689,20 @@ def save_param_references_directly(server_path, cli_path):
         print(f"DEBUG: Save failed: {e}")
         return False, f"Error saving parameters: {e}"
 
-def generate_llama_server_ini():
+def generate_llama_server_ini_models_only():
+    """Generate INI with flagged models only."""
+    return generate_llama_server_ini(include_models_dir=False)
+
+def generate_llama_server_ini_with_folder():
+    """Generate INI with flagged models + folder scanning."""
+    return generate_llama_server_ini(include_models_dir=True)
+
+def generate_llama_server_ini(include_models_dir=False):
     """
-    Generate a single llama-server.ini containing all models.
+    Generate a single llama-server.ini containing flagged models.
+    
+    Args:
+        include_models_dir: If True, adds models_dir to global section for folder scanning
     """
     from .config import DATA_ROOT
     from .utils import get_all_models, get_model_config, load_defaults
@@ -707,6 +720,14 @@ def generate_llama_server_ini():
     # Global section
     # -------------------------
     lines.append("[*]")
+    
+    # Add models_dir if requested
+    if include_models_dir:
+        scan_cfg = load_scan_cfg()
+        models_dir = scan_cfg.get("llama_server_models_dir", "")
+        if models_dir:
+            lines.append(f"models_dir = {models_dir}")
+            lines.append("")
 
     for key, vals in params.get("common", {}).items():
         val = vals.get("gpu", "")
