@@ -100,7 +100,7 @@
     <div class="command-section">
       <label><strong>GPU INI Only:</strong></label>
       <div class="command-input-group">
-        <input type="text" value="llama-server --config-file llama-server.ini{{ ' ' + ini_commands.gpu if ini_commands.gpu else '' }}" readonly id="gpuIniCmd" class="command-input">
+        <input type="text" value="{{ SERVER_GPU_BIN }} --config-file {{ ini_path }}{{ ' ' + ini_commands.gpu if ini_commands.gpu else '' }}" readonly id="gpuIniCmd" class="command-input">
         <button onclick="copyCommand('gpuIniCmd')" class="copy-btn">Copy</button>
       </div>
     </div>
@@ -108,7 +108,7 @@
     <div class="command-section">
       <label><strong>CPU INI Only:</strong></label>
       <div class="command-input-group">
-        <input type="text" value="llama-server --config-file llama-server.ini{{ ' ' + ini_commands.cpu if ini_commands.cpu else '' }}" readonly id="cpuIniCmd" class="command-input">
+        <input type="text" value="{{ SERVER_CPU_BIN }} --config-file {{ ini_path }}{{ ' ' + ini_commands.cpu if ini_commands.cpu else '' }}" readonly id="cpuIniCmd" class="command-input">
         <button onclick="copyCommand('cpuIniCmd')" class="copy-btn">Copy</button>
       </div>
     </div>
@@ -116,7 +116,7 @@
     <div class="command-section">
       <label><strong>GPU INI + Folder:</strong></label>
       <div class="command-input-group">
-        <input type="text" value="llama-server --config-file llama-server.ini --models-dir {{ models_dir }}{{ ' ' + ini_commands.gpu if ini_commands.gpu else '' }}" readonly id="gpuIniFolderCmd" class="command-input">
+        <input type="text" value="{{ SERVER_GPU_BIN }} --config-file {{ ini_path }} --models-dir {{ models_dir }}{{ ' ' + ini_commands.gpu if ini_commands.gpu else '' }}" readonly id="gpuIniFolderCmd" class="command-input">
         <button onclick="copyCommand('gpuIniFolderCmd')" class="copy-btn">Copy</button>
       </div>
     </div>
@@ -124,7 +124,7 @@
     <div class="command-section">
       <label><strong>CPU INI + Folder:</strong></label>
       <div class="command-input-group">
-        <input type="text" value="llama-server --config-file llama-server.ini --models-dir {{ models_dir }}{{ ' ' + ini_commands.cpu if ini_commands.cpu else '' }}" readonly id="cpuIniFolderCmd" class="command-input">
+        <input type="text" value="{{ SERVER_CPU_BIN }} --config-file {{ ini_path }} --models-dir {{ models_dir }}{{ ' ' + ini_commands.cpu if ini_commands.cpu else '' }}" readonly id="cpuIniFolderCmd" class="command-input">
         <button onclick="copyCommand('cpuIniFolderCmd')" class="copy-btn">Copy</button>
       </div>
     </div>

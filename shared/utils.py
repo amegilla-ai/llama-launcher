@@ -344,6 +344,7 @@ def render_static_page(model_groups):
             CLI_CPU_BIN=cfg.get("llama_cli_cpu_bin", ""),
             llama_server_commands=llama_server_commands,
             ini_commands={"gpu": f"{host_flag}{port_flag}".strip(), "cpu": f"{host_flag}{port_flag}".strip()},
+            ini_path=ini_path,
             models_dir=cfg.get("llama_server_models_dir", "/path/to/models"),
             css_url="../../static_site/assets/style.css",
             js_url="../../static_site/assets/copy.js"
