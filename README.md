@@ -13,6 +13,9 @@ A clean, web-based interface for managing and launching GGUF language models wit
 - 🔧 **Parameter Discovery**: Extract available parameters directly from llama.cpp binaries with automatic parsing
 - 🎨 **Modern UI**: Clean interface using Inter font with consistent styling
 - ⚡ **Settings Management**: Unified settings page for configuration, folders, and defaults
+- 📋 **INI Generation**: Flag models for inclusion in llama-server INI configuration files
+- 🖥️ **Server Commands**: Ready-to-copy commands for both INI-only and INI+folder scanning modes
+- 🔄 **Dynamic Model Loading**: Generate llama-server.ini for dynamic model loading without restart
 
 ## Quick Start
 
@@ -37,7 +40,8 @@ A clean, web-based interface for managing and launching GGUF language models wit
 5. **Set Default Parameters**: Configure default settings for new models with GPU/CPU values
 6. **Scan Models**: Click "Scan for Models" to discover all GGUF files in configured directories
 7. **Edit Parameters**: Click "Edit" on any model to customize parameters with GPU/CPU values
-8. **Launch Interface**: Click "Launch Commands" to open the generated model launcher
+8. **Flag for INI**: Use the checkbox at the top of each model's edit page to include it in INI generation
+9. **Launch Interface**: Click "Launch Commands" to open the generated model launcher with INI server options
 
 ## Parameter Architecture
 
@@ -83,14 +87,18 @@ The system generates 4 command combinations for each model:
 
 ### Admin Interface (http://localhost:5001)
 - **Dashboard**: View all models with their Common/Server/CLI parameters in organized columns
+- **INI Flags**: Models flagged for INI inclusion show a green "INI" badge
 - **Settings**: Unified configuration page for binary paths, scan folders, and default parameters
 - **Edit Models**: Click any model name to customize launch parameters with GPU/CPU values
+- **INI Selection**: Checkbox at top of edit page to flag models for llama-server INI generation
 - **Parameter Discovery**: Generate parameter references from llama.cpp binaries with direct parsing
 - **Add from Llama.cpp**: Use modal interface to add official parameters with descriptions
 
 ### Static Launcher (`data/static_site/index.html`)
 - **Standalone HTML**: Works without the Flask server running
+- **INI Server Commands**: Four llama-server command options (GPU/CPU × INI-only/INI+Folder)
 - **Copy Commands**: Click clipboard icons to copy launch commands to clipboard
+- **INI Badges**: Models flagged for INI inclusion show green "INI" badges
 - **Organized Display**: Models grouped by directory with file sizes
 - **Four Command Types**: GPU-Server, CPU-Server, GPU-CLI, CPU-CLI combinations
 

@@ -333,6 +333,12 @@ def render_static_page(model_groups):
             "gpu": f'{server_gpu_bin} --models-preset {ini_path} {host_flag}{port_flag}'.strip(),
             "cpu": f'{server_cpu_bin} --models-preset {ini_path} {host_flag}{port_flag}'.strip()
         }
+        
+        # INI+Folder commands use --config-file instead of --models-preset
+        llama_server_ini_folder_commands = {
+            "gpu": f'{server_gpu_bin} --config-file {ini_path} --models-dir {cfg.get("llama_server_models_dir", "/path/to/models")} {host_flag}{port_flag}'.strip(),
+            "cpu": f'{server_cpu_bin} --config-file {ini_path} --models-dir {cfg.get("llama_server_models_dir", "/path/to/models")} {host_flag}{port_flag}'.strip()
+        }
 
         # Render template...
         template = env.get_template("model_list.html")
@@ -343,6 +349,7 @@ def render_static_page(model_groups):
             CLI_GPU_BIN=cfg.get("llama_cli_gpu_bin", ""),
             CLI_CPU_BIN=cfg.get("llama_cli_cpu_bin", ""),
             llama_server_commands=llama_server_commands,
+            llama_server_ini_folder_commands=llama_server_ini_folder_commands,
             ini_commands={"gpu": f"{host_flag}{port_flag}".strip(), "cpu": f"{host_flag}{port_flag}".strip()},
             ini_path=ini_path,
             models_dir=cfg.get("llama_server_models_dir", "/path/to/models"),

@@ -39,7 +39,7 @@
     <div class="command-section">
       <label><strong>GPU Server (INI + Folder):</strong></label>
       <div class="command-input-group">
-        <input type="text" value="{{ llama_server_commands.gpu }} --models-dir {{ models_dir }}" readonly id="gpuFolderCmd" class="command-input">
+        <input type="text" value="{{ llama_server_ini_folder_commands.gpu }}" readonly id="gpuFolderCmd" class="command-input">
         <button onclick="copyCommand('gpuFolderCmd')" class="copy-btn">Copy</button>
       </div>
     </div>
@@ -47,7 +47,7 @@
     <div class="command-section">
       <label><strong>CPU Server (INI + Folder):</strong></label>
       <div class="command-input-group">
-        <input type="text" value="{{ llama_server_commands.cpu }} --models-dir {{ models_dir }}" readonly id="cpuFolderCmd" class="command-input">
+        <input type="text" value="{{ llama_server_ini_folder_commands.cpu }}" readonly id="cpuFolderCmd" class="command-input">
         <button onclick="copyCommand('cpuFolderCmd')" class="copy-btn">Copy</button>
       </div>
     </div>
