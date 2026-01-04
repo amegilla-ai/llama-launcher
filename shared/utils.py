@@ -181,7 +181,6 @@ def load_defaults_old():
         "comments": {"common": {}, "server": {}, "cli": {}}
     }
 
-
 def save_defaults(params, comments):
     """Save global default parameters."""
     DEFAULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -339,7 +338,13 @@ def render_static_page(model_groups):
         if output_file.exists():
             output_file.unlink()    
         output_file.write_text(rendered, encoding="utf-8")
-        
+
+        try:
+            generate_llama_server_ini()
+            print("✅ Generated llama-server.ini successfully.")
+        except Exception as e:
+            print(f"❗ Failed to generate llama-server.ini: {e}")
+
     except Exception as e:
         print(f"❗ Failed to render static page: {e}")
 
@@ -674,6 +679,7 @@ def generate_llama_server_ini():
     from .config import DATA_ROOT
     from .utils import get_all_models, get_model_config, load_defaults
 
+    print("🔧 Generating llama-server.ini...")
     defaults = load_defaults()
     params = defaults["params"]
     comments = defaults["comments"]
