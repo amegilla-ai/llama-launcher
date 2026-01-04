@@ -730,7 +730,7 @@ def generate_llama_server_ini():
     # -------------------------
     for row in get_all_models():
         # Skip models not flagged for INI inclusion
-        if not row.get("include_in_ini"):
+        if not row["include_in_ini"]:
             continue
             
         config = get_model_config(row["model_path"])
