@@ -1,6 +1,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Model Launcher</title>
   <link rel="stylesheet" href="{{ css_url }}">
 </head>
@@ -90,45 +93,45 @@
   {% endif %}
 
   <!-- INI Commands Section -->
-  <div class="server-commands">
-    <h3>llama-server INI Commands</h3>
+  <section class="group">
+    <h2 class="group-title">llama-server INI Commands</h2>
     <p style="color: var(--muted); margin-bottom: 1rem; font-size: 0.9rem;">
       Use these commands to run llama-server with the generated INI configuration. 
       <strong>INI-only</strong> uses flagged models. <strong>INI+Folder</strong> also scans the models directory for additional models.
     </p>
     
-    <div class="command-section">
-      <label><strong>GPU INI Only:</strong></label>
-      <div class="command-input-group">
-        <input type="text" value="{{ SERVER_GPU_BIN }} --config-file {{ ini_path }}{{ ' ' + ini_commands.gpu if ini_commands.gpu else '' }}" readonly id="gpuIniCmd" class="command-input">
-        <button onclick="copyCommand('gpuIniCmd')" class="copy-btn">Copy</button>
+    <article class="model-card">
+      <div class="cmd-blocks">
+        <div class="cmd-row">
+          <span class="cmd-label">GPU INI Only</span>
+          <button class="copy-btn" data-cmd="{{ SERVER_GPU_BIN }} --config-file {{ ini_path }}{{ ' ' + ini_commands.gpu if ini_commands.gpu else '' }}" aria-label="Copy command">
+            <svg viewBox="0 0 24 24"><use href="#copy-icon"/></svg>
+          </button>
+        </div>
+        
+        <div class="cmd-row">
+          <span class="cmd-label">CPU INI Only</span>
+          <button class="copy-btn" data-cmd="{{ SERVER_CPU_BIN }} --config-file {{ ini_path }}{{ ' ' + ini_commands.cpu if ini_commands.cpu else '' }}" aria-label="Copy command">
+            <svg viewBox="0 0 24 24"><use href="#copy-icon"/></svg>
+          </button>
+        </div>
+        
+        <div class="cmd-row">
+          <span class="cmd-label">GPU INI + Folder</span>
+          <button class="copy-btn" data-cmd="{{ SERVER_GPU_BIN }} --config-file {{ ini_path }} --models-dir {{ models_dir }}{{ ' ' + ini_commands.gpu if ini_commands.gpu else '' }}" aria-label="Copy command">
+            <svg viewBox="0 0 24 24"><use href="#copy-icon"/></svg>
+          </button>
+        </div>
+        
+        <div class="cmd-row">
+          <span class="cmd-label">CPU INI + Folder</span>
+          <button class="copy-btn" data-cmd="{{ SERVER_CPU_BIN }} --config-file {{ ini_path }} --models-dir {{ models_dir }}{{ ' ' + ini_commands.cpu if ini_commands.cpu else '' }}" aria-label="Copy command">
+            <svg viewBox="0 0 24 24"><use href="#copy-icon"/></svg>
+          </button>
+        </div>
       </div>
-    </div>
-    
-    <div class="command-section">
-      <label><strong>CPU INI Only:</strong></label>
-      <div class="command-input-group">
-        <input type="text" value="{{ SERVER_CPU_BIN }} --config-file {{ ini_path }}{{ ' ' + ini_commands.cpu if ini_commands.cpu else '' }}" readonly id="cpuIniCmd" class="command-input">
-        <button onclick="copyCommand('cpuIniCmd')" class="copy-btn">Copy</button>
-      </div>
-    </div>
-    
-    <div class="command-section">
-      <label><strong>GPU INI + Folder:</strong></label>
-      <div class="command-input-group">
-        <input type="text" value="{{ SERVER_GPU_BIN }} --config-file {{ ini_path }} --models-dir {{ models_dir }}{{ ' ' + ini_commands.gpu if ini_commands.gpu else '' }}" readonly id="gpuIniFolderCmd" class="command-input">
-        <button onclick="copyCommand('gpuIniFolderCmd')" class="copy-btn">Copy</button>
-      </div>
-    </div>
-    
-    <div class="command-section">
-      <label><strong>CPU INI + Folder:</strong></label>
-      <div class="command-input-group">
-        <input type="text" value="{{ SERVER_CPU_BIN }} --config-file {{ ini_path }} --models-dir {{ models_dir }}{{ ' ' + ini_commands.cpu if ini_commands.cpu else '' }}" readonly id="cpuIniFolderCmd" class="command-input">
-        <button onclick="copyCommand('cpuIniFolderCmd')" class="copy-btn">Copy</button>
-      </div>
-    </div>
-  </div>
+    </article>
+  </section>
 
   {% if not model_groups %}
     <p class="empty">No models found.</p>
